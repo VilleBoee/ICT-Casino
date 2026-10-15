@@ -1,4 +1,5 @@
 import type { Chips, GameId, RoundResult, WalletState } from './types'
+import { HistoryStore, type HistoryOptions } from './history'
 
 export const STORAGE_KEY = 'ict-casino:wallet'
 export const STARTING_BALANCE: Chips = 1000
@@ -16,11 +17,14 @@ export class Wallet {
 
   private storage: Storage
   private now: () => number
+  /** Long round log (own storage key), written by settle(). Use for stats. */
+  readonly history: HistoryStore
 
-  constructor(storage: Storage = localStorage, now: () => number = Date.now) {
+  constructor(storage: Storage = localStorage, now: () => number = Date.now, historyOpts?: HistoryOptions) {
     this.storage = storage
     this.now = now
     this.state = this.load()
+    this.history = new HistoryStore(storage, now, historyOpts)
   }
 
   private load(): WalletState {
@@ -54,12 +58,14 @@ export class Wallet {
   }
 
   /** Credits the payout of a finished round and records it. */
-  settle(result: Pick<RoundResult, 'game' | 'stake' | 'payout'>): void {
+  settle(result: Pick<RoundResult, 'game' | 'stake' | 'payout'> & { roundId?: string }): void {
     const { game, stake, payout } = result
+    if (!Number.isInteger(stake) || stake < 0) throw new Error('Invalid stake')
     if (!Number.isInteger(payout) || payout < 0) throw new Error('Invalid payout')
     const history = [{ game, stake, payout, at: this.now() }, ...this.state.history].slice(0, HISTORY_LIMIT)
     this.state = { ...this.state, balance: this.state.balance + payout, history }
     this.save()
+    this.history.record({ game, stake, payout, roundId: result.roundId }, this.state.balance)
   }
 
   canRefill(): boolean { return this.now() - this.state.lastRefill >= DAY_MS }
