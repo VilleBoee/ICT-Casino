@@ -251,4 +251,92 @@ describe('holdem table', () => {
     const play = () => { const { t } = table(42); for (let i = 0; i < 5; i++) { t.startHand(); while (t.inHand) { if (t.isHumanTurn) t.act({ type: 'fold' }); else t.botStep() } } return t.seats.map((s) => s.stack) }
     expect(play()).toEqual(play())
   })
+
+  it('1000 seeded hands: bots stay legal and chips are conserved every hand', () => {
+    const w = new Wallet(mem(), () => 0)
+    w.settle({ game: 'holdem', stake: 0, payout: 1_000_000 })
+    const t = new HoldemTable(w, { buyIn: 600, bots: 5, rng: seededRng(1000), botSims: 12, blindSchedule: { everyHands: 100, factor: 1.5 } })
+    for (let n = 0; n < 1000; n++) {
+      if (t.human.stack === 0) t.rebuy(600)
+      // bots that busted are topped up at startHand; count chips after that
+      t.startHand()
+      const before = t.seats.reduce((a, s) => a + s.stack + s.committed, 0)
+      while (t.inHand) {
+        if (t.isHumanTurn) {
+          const l = t.legalActions()
+          t.act(l.check ? { type: 'check' } : l.call <= t.bigBlind * 2 ? { type: 'call' } : { type: 'fold' })
+        } else {
+          const seat = t.toAct!
+          const legal = t.legalActionsFor(seat)
+          const { action } = t.botStep()!
+          if (action.type === 'check') expect(legal.check).toBe(true)
+          if (action.type === 'call') expect(legal.call).toBeGreaterThan(0)
+          if (action.type === 'bet' || action.type === 'raise') {
+            expect(legal.raise?.kind).toBe(action.type)
+            expect(action.to).toBeGreaterThanOrEqual(legal.raise!.min)
+            expect(action.to).toBeLessThanOrEqual(legal.raise!.max)
+          }
+        }
+      }
+      expect(t.seats.reduce((a, s) => a + s.stack, 0)).toBe(before)
+      expect(t.seats.every((s) => Number.isInteger(s.stack) && s.stack >= 0)).toBe(true)
+    }
+    expect(t.handNo).toBe(1000)
+    expect(t.bigBlind).toBeGreaterThan(20)
+  }, 120_000)
+
+  it('three all-ins of different sizes build correct side pots and pay each one', () => {
+    const { t } = table(9)
+    t.startHand() // dealer 0, SB 1, BB 2, first to act 3
+    t.seats[3].stack = 100; t.seats[4].stack = 250; t.seats[5].stack = 400
+    // rig the showdown: seat 3 best, seat 4 second, seat 5 third, BB worst
+    t['deck'] = h('2c 7d 9h Js 3s').reverse()
+    t.seats[3].hole = h('Ah Ad'); t.seats[4].hole = h('Kh Kd'); t.seats[5].hole = h('Qh Qd'); t.seats[2].hole = h('4c 5d')
+    t['apply'](3, { type: 'allin' })
+    t['apply'](4, { type: 'allin' })
+    t['apply'](5, { type: 'allin' })
+    t['apply'](0, { type: 'fold' })
+    t['apply'](1, { type: 'fold' })
+    t['apply'](2, { type: 'allin' }) // BB has 580 behind but nobody can call more, so this is a call to 400
+    expect(t.phase).toBe('handOver')
+    const pots = t.lastHand!.pots
+    expect(pots.map((p) => p.amount)).toEqual([410, 450, 300])
+    expect(pots.map((p) => p.winners)).toEqual([[3], [4], [5]])
+    expect(t.lastHand!.won).toEqual({ 3: 410, 4: 450, 5: 300 })
+    expect(t.seats[2].stack).toBe(200)
+    expect(total(t)).toBe(600 * 3 + 100 + 250 + 400)
+  })
+
+  it('increasing blinds on a schedule and via setBlinds', () => {
+    const w = new Wallet(mem(), () => 0)
+    const t = new HoldemTable(w, { buyIn: 600, rng: seededRng(3), botSims: 10, blindSchedule: { everyHands: 2, factor: 2 } })
+    const play = () => { t.startHand(); while (t.inHand) { if (t.isHumanTurn) t.act({ type: 'fold' }); else t.botStep() } }
+    play(); play()
+    expect(t.bigBlind).toBe(20)
+    play()
+    expect([t.smallBlind, t.bigBlind]).toEqual([20, 40])
+    expect(() => { t.startHand(); t.setBlinds(50, 100) }).toThrow()
+    while (t.inHand) { if (t.isHumanTurn) t.act({ type: 'fold' }); else t.botStep() }
+    t.blindSchedule = null
+    t.setBlinds(50, 100)
+    t.startHand()
+    expect(t.currentBet).toBe(100)
+    expect(() => t.setBlinds(0, 10)).toThrow()
+  })
+
+  it('exposes a HoldemState snapshot and a configurable bot delay', () => {
+    const w = new Wallet(mem(), () => 0)
+    const t = new HoldemTable(w, { buyIn: 600, rng: seededRng(4), botSims: 10, botDelayMs: 250 })
+    t.startHand()
+    const s = t.getState()
+    expect(s).toMatchObject({ handNo: 1, phase: 'preflop', toAct: 3, isHumanTurn: false, botDelayMs: 250, pot: 30, smallBlind: 10, bigBlind: 20 })
+    expect(s.seats).toHaveLength(6)
+    expect(s.legal.fold).toBe(false)
+    ;(s.seats[0] as Seat).stack = -1
+    expect(t.human.stack).toBe(600) // snapshot is a copy
+    t.botDelayMs = 0
+    t.runBots()
+    if (t.isHumanTurn) expect(t.getState()).toMatchObject({ botDelayMs: 0, isHumanTurn: true, legal: { fold: true } })
+    expect(() => new HoldemTable(w, { buyIn: 200, botDelayMs: -1 })).toThrow()
+  })
 })

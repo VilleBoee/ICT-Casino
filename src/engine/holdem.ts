@@ -63,6 +63,33 @@ export interface HoldemOptions {
   styles?: BotStyle[]
   /** Monte Carlo samples per bot decision. */
   botSims?: number
+  /** Suggested pause before each bot move, for the UI animation (default 700 ms). */
+  botDelayMs?: number
+  /** Increasing blinds: multiply both blinds by `factor` (rounded) every `everyHands` hands. */
+  blindSchedule?: { everyHands: number; factor: number }
+}
+
+/** Read-only snapshot for the UI. */
+export interface HoldemState {
+  handNo: number
+  phase: HoldemPhase
+  dealer: number
+  smallBlind: Chips
+  bigBlind: Chips
+  /** Seat whose turn it is, or null. Seat 0 is the human. */
+  toAct: number | null
+  isHumanTurn: boolean
+  /** Human's options (all false/null when it's not their turn). */
+  legal: LegalActions
+  currentBet: Chips
+  pot: Chips
+  pots: Pot[]
+  board: Card[]
+  seats: Readonly<Seat>[]
+  lastHand: HandSummary | null
+  /** How long the UI should wait before calling botStep() (0 when it's not a bot's turn). */
+  botDelayMs: number
+  totalBuyIn: Chips
 }
 
 export const BOT_NAMES = ['NullPointer', 'Segfault', 'StackOverflow', 'RaceCondition', 'DeadLock', 'BitFlip', 'CacheMiss', 'OffByOne']
@@ -134,8 +161,11 @@ export class HoldemTable {
   handNo = 0
   lastHand: HandSummary | null = null
   log: LogEntry[] = []
-  readonly smallBlind: Chips
-  readonly bigBlind: Chips
+  smallBlind: Chips
+  bigBlind: Chips
+  /** Suggested pause before each bot move (ms). Change freely, e.g. a "fast bots" toggle. */
+  botDelayMs: number
+  blindSchedule: { everyHands: number; factor: number } | null
   /** Total chips the human has bought in for (the stake). */
   totalBuyIn: Chips
   private deck: Card[] = []
@@ -156,6 +186,11 @@ export class HoldemTable {
     this.wallet = wallet
     this.rng = opts.rng ?? cryptoRng
     this.botSims = opts.botSims ?? 150
+    this.botDelayMs = opts.botDelayMs ?? 700
+    if (!Number.isFinite(this.botDelayMs) || this.botDelayMs < 0) throw new Error('botDelayMs must be >= 0')
+    const bs = opts.blindSchedule
+    if (bs && (!Number.isInteger(bs.everyHands) || bs.everyHands < 1 || !(bs.factor > 1))) throw new Error('Invalid blind schedule')
+    this.blindSchedule = bs ?? null
     this.minRaise = this.bigBlind
     this.totalBuyIn = opts.buyIn
     this.botBuyIn = opts.buyIn
@@ -202,6 +237,10 @@ export class HoldemTable {
     for (const s of this.seats) {
       if (!s.human && s.stack === 0) s.stack = this.botBuyIn // busted bots rebuy
       Object.assign(s, { bet: 0, committed: 0, hole: [], folded: false, allIn: false, acted: false, canRaise: true, lastAction: null })
+    }
+    const sched = this.blindSchedule
+    if (sched && this.handNo > 0 && this.handNo % sched.everyHands === 0) {
+      this.setBlinds(Math.round(this.smallBlind * sched.factor), Math.round(this.bigBlind * sched.factor))
     }
     this.handNo++
     this.board = []
@@ -387,6 +426,25 @@ export class HoldemTable {
     if (equity >= potOdds + st.margin) return { type: 'call' }
     if (this.rng.next() < st.bluff / 2) { const a = raiseTo(1); if (a) return a }
     return { type: 'fold' }
+  }
+
+  /** Changes the blinds between hands (used by the blind schedule too). */
+  setBlinds(small: Chips, big: Chips): void {
+    if (this.inHand) throw new Error('Change blinds between hands')
+    if (!Number.isInteger(small) || !Number.isInteger(big) || small <= 0 || small > big) throw new Error('Invalid blinds')
+    this.smallBlind = small
+    this.bigBlind = big
+    this.minRaise = big
+  }
+
+  /** Snapshot for rendering. Copies are shallow: treat it as read-only. */
+  getState(): HoldemState {
+    return {
+      handNo: this.handNo, phase: this.phase, dealer: this.dealer, smallBlind: this.smallBlind, bigBlind: this.bigBlind,
+      toAct: this.toAct, isHumanTurn: this.isHumanTurn, legal: this.legalActions(), currentBet: this.currentBet,
+      pot: this.pot, pots: this.pots, board: [...this.board], seats: this.seats.map((x) => ({ ...x, hole: [...x.hole] })),
+      lastHand: this.lastHand, botDelayMs: this.isBotTurn ? this.botDelayMs : 0, totalBuyIn: this.totalBuyIn,
+    }
   }
 
   /** Adds chips from the wallet between hands. */
