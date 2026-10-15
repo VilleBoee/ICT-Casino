@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useT, type Key } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { useReducedMotion } from 'framer-motion'
 import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 import { Card, CountUp, ResultToast, Table } from '../../components'
@@ -17,6 +19,7 @@ interface Slot { card: EngineCard; faceDown: boolean }
 export default function VideoPokerGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const t = useT()
   // phones: only the current coin column of the paytable, and smaller cards so 5 fit in 360px
   const phone = useMediaQuery(PHONE)
   const [coins, setCoins] = useState<number>(5)
@@ -56,7 +59,7 @@ export default function VideoPokerGame() {
   const deal = () => {
     if (phase === 'dealing' || phase === 'hold' || phase === 'drawing') return
     let r: VideoPokerRound
-    try { r = new VideoPokerRound(wallet, { coins, coinSize: coinValue }) } catch (e) { setError((e as Error).message); return }
+    try { r = new VideoPokerRound(wallet, { coins, coinSize: coinValue }) } catch (e) { setError(errorText(e, t)); return }
     round.current = r
     setError(null); setToast(null); setFinal(null)
     setHeld([false, false, false, false, false])
@@ -123,31 +126,31 @@ export default function VideoPokerGame() {
     <div className="space-y-4">
       <Table
         title="video-poker.tsx"
-        subtitle="Jacks or Better · 9/6 full pay · royal 4000 at max coins"
-        actions={<span className="font-mono text-xs text-muted">keys: 1–5 hold · ⏎ deal/draw</span>}
+        subtitle={t('vp.subtitle')}
+        actions={<span className="font-mono text-xs text-muted">{t('vp.keys')}</span>}
         footer={
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1" role="group" aria-label="Coins">
-              <span className="mr-1 font-mono text-xs uppercase text-muted">coins</span>
+            <div className="flex items-center gap-1" role="group" aria-label={t('vp.coinsAria')}>
+              <span className="mr-1 font-mono text-xs uppercase text-muted">{t('vp.coins')}</span>
               {COINS.map((c) => (
                 <button key={c} type="button" aria-pressed={coins === c} disabled={phase === 'hold' || busy || c * coinValue > balance}
                   className={`${coins === c ? 'btn-secondary' : 'btn-ghost'} px-3`} onClick={() => setCoins(c)}>{c}</button>
               ))}
             </div>
             <label className="flex items-center gap-1 font-mono text-xs text-muted">
-              coin
+              {t('vp.coin')}
               <select value={coinValue} disabled={phase === 'hold' || busy} onChange={(e) => setCoinValue(Number(e.target.value))}
                 className="rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg">
                 {COIN_VALUES.map((v) => <option key={v} value={v} disabled={v * coins > balance}>{v}</option>)}
               </select>
             </label>
-            <span className="font-mono text-sm text-muted">bet <span className="num text-neon">{bet}</span></span>
+            <span className="font-mono text-sm text-muted">{t('vp.bet')} <span className="num text-neon">{bet}</span></span>
             <div className="ml-auto flex gap-2">
               {phase === 'hold' || phase === 'drawing' ? (
-                <button type="button" className="btn-primary min-w-28" disabled={busy} onClick={draw}>Draw</button>
+                <button type="button" className="btn-primary min-w-28" disabled={busy} onClick={draw}>{t('vp.draw')}</button>
               ) : (
                 <button id="vp-deal" type="button" className="btn-primary min-w-28" disabled={busy || bet > balance} onClick={deal}>
-                  {phase === 'done' ? 'Deal again' : 'Deal'}
+                  {phase === 'done' ? t('bj.dealAgain') : t('bj.deal')}
                 </button>
               )}
             </div>
@@ -158,12 +161,12 @@ export default function VideoPokerGame() {
         <div className="space-y-6">
           {/* paytable */}
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse sm:min-w-[420px] font-mono text-xs sm:text-sm" aria-label="Paytable">
+            <table className="w-full border-collapse sm:min-w-[420px] font-mono text-xs sm:text-sm" aria-label={t('vp.paytable')}>
               <thead>
                 <tr className="text-muted">
-                  <th className="px-2 py-1 text-left font-normal">hand</th>
+                  <th className="px-2 py-1 text-left font-normal">{t('vp.hand')}</th>
                   {COINS.map((c) => (
-                    <th key={c} scope="col" className={`px-2 py-1 text-right font-normal ${c === coins ? 'bg-cyan/15 text-cyan' : 'hidden sm:table-cell'}`}>{c} coin{c > 1 && 's'}</th>
+                    <th key={c} scope="col" className={`px-2 py-1 text-right font-normal ${c === coins ? 'bg-cyan/15 text-cyan' : 'hidden sm:table-cell'}`}>{t(c > 1 ? 'vp.nCoins' : 'vp.nCoin', { n: c })}</th>
                   ))}
                 </tr>
               </thead>
@@ -174,7 +177,7 @@ export default function VideoPokerGame() {
                   return (
                     <tr key={h} aria-current={on || undefined}
                       className={`border-t border-border/60 transition-colors ${win ? 'bg-win/20 text-win' : on ? 'bg-neon/10 text-neon' : 'text-fg'}`}>
-                      <th scope="row" className="px-2 py-1 text-left font-semibold">{h}{win && ' ◀'}</th>
+                      <th scope="row" className="px-2 py-1 text-left font-semibold">{t(`hand.${h}` as Key)}{win && ' ◀'}</th>
                       {COINS.map((c) => (
                         <td key={c} className={`num px-2 py-1 text-right ${c === coins ? (win ? 'bg-win/25 font-bold' : 'bg-cyan/10') : 'hidden sm:table-cell'}`}>{payFor(h, c)}</td>
                       ))}
@@ -188,12 +191,12 @@ export default function VideoPokerGame() {
           {/* cards */}
           <div className="flex justify-center gap-2 sm:gap-3" key={dealId}>
             {slots.length === 0
-              ? <p className="py-10 font-mono text-sm text-muted">// choose your bet and deal</p>
+              ? <p className="py-10 font-mono text-sm text-muted">{t('vp.choose')}</p>
               : slots.map((s, i) => (
                 <div key={i} className="flex flex-col items-center gap-2">
-                  <span className={`h-5 rounded px-2 font-mono text-[11px] font-bold ${held[i] ? 'bg-neon text-bg' : 'text-transparent'}`} aria-hidden={!held[i]}>HOLD</span>
+                  <span className={`h-5 rounded px-2 font-mono text-[11px] font-bold ${held[i] ? 'bg-neon text-bg' : 'text-transparent'}`} aria-hidden={!held[i]}>{t('vp.HOLD')}</span>
                   <button type="button" onClick={() => toggle(i)} disabled={phase !== 'hold'} aria-pressed={held[i]}
-                    aria-label={`Card ${i + 1}${held[i] ? ', held' : ''}`}
+                    aria-label={`${t('vp.card', { n: i + 1 })}${held[i] ? t('vp.held') : ''}`}
                     className={`rounded-md transition-transform disabled:cursor-default ${held[i] ? '-translate-y-2 ring-2 ring-neon ring-offset-2 ring-offset-bg' : ''}`}>
                     <Card card={s.card} faceDown={s.faceDown} size={phone ? 'sm' : 'lg'} dealIndex={i}
                       highlight={phase === 'done' && !!final && final.payout > 0} />
@@ -204,17 +207,17 @@ export default function VideoPokerGame() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 text-center" aria-live="polite">
-            {phase === 'hold' && <p className="font-mono text-sm text-muted">{hint ? <>you have <span className="text-neon">{hint}</span></> : 'select cards to hold, then draw'}</p>}
+            {phase === 'hold' && <p className="font-mono text-sm text-muted">{hint ? <>{t('vp.youHave')} <span className="text-neon">{t(`hand.${hint}` as Key)}</span></> : t('vp.select')}</p>}
             {phase === 'done' && final && (
               <p className="font-mono text-lg">
-                <span className={final.payout > 0 ? 'text-win' : 'text-muted'}>{final.outcome.hand === 'Nothing' ? 'No win' : final.outcome.hand}</span>
-                {final.payout > 0 && <> · {final.outcome.coinsWon} coins · <CountUp value={final.payout} className="num text-win" /><span className="sr-only">{final.payout} chips</span></>}
+                <span className={final.payout > 0 ? 'text-win' : 'text-muted'}>{final.outcome.hand === 'Nothing' ? t('vp.noWin') : t(`hand.${final.outcome.hand}` as Key)}</span>
+                {final.payout > 0 && <> · {t('vp.coinsWon', { n: final.outcome.coinsWon })} · <CountUp value={final.payout} className="num text-win" /><span className="sr-only">{t('vp.chips', { n: final.payout })}</span></>}
               </p>
             )}
           </div>
         </div>
       </Table>
-      <ResultToast result={toast} message={toast?.outcome.hand} onDismiss={() => setToast(null)} />
+      <ResultToast result={toast} message={toast ? t(`hand.${toast.outcome.hand}` as Key) : undefined} onDismiss={() => setToast(null)} />
     </div>
   )
 }

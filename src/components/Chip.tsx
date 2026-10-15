@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import type { Chips } from '../engine/types'
+import { useT } from '../i18n'
 
 export const DENOMINATIONS = [1, 5, 25, 100, 500, 1000] as const satisfies readonly Chips[]
 export type Denomination = (typeof DENOMINATIONS)[number]
@@ -19,6 +20,7 @@ export interface ChipProps {
 
 export function Chip({ value, size = 48, selected = false, disabled = false, onClick }: ChipProps) {
   const reduce = useReducedMotion()
+  const t = useT()
   const color = CHIP_COLOR[value]
   const style = {
     width: size, height: size, fontSize: size * 0.28, color,
@@ -30,11 +32,11 @@ export function Chip({ value, size = 48, selected = false, disabled = false, onC
     </span>
   )
   const cls = `grid shrink-0 place-items-center rounded-full ${selected ? 'ring-2 ring-neon ring-offset-2 ring-offset-bg' : ''}`
-  if (!onClick) return <span className={cls} style={style} aria-label={`${value} chip`}>{inner}</span>
+  if (!onClick) return <span className={cls} style={style} aria-label={t('chip.aria', { n: value })}>{inner}</span>
   return (
     <motion.button
       type="button"
-      aria-label={`${value} chip`}
+      aria-label={t('chip.aria', { n: value })}
       aria-pressed={selected}
       data-sfx="chip"
       disabled={disabled}

@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { colorOf } from '../../engine/roulette'
 import { POCKET_DEG, WHEEL_ORDER } from './wheelMath'
+import { useT } from '../../i18n'
 
 const FILL = { red: '#b91c3a', black: '#141b1e', green: '#0f8a4a' } as const
 const R = 140
@@ -32,11 +33,12 @@ export interface WheelProps {
 /** SVG European wheel. Wheel spins clockwise, ball counter-clockwise, both stop at the top pointer. */
 export function Wheel({ rotation, ballAngle, spinning, durationS, onSettled, winning }: WheelProps) {
   const reduce = useReducedMotion()
+  const tr = useT()
   const t = reduce || !spinning ? { duration: 0 } : { duration: durationS, ease: [0.12, 0.6, 0.15, 1] as const }
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[320px]">
       <svg viewBox="0 0 320 320" className="h-full w-full" role="img"
-        aria-label={winning === null ? 'Roulette wheel' : `Roulette wheel showing ${winning}`}>
+        aria-label={winning === null ? tr('rl.wheel') : tr('rl.wheelShowing', { n: winning })}>
         <circle cx={C} cy={C} r={158} fill="#0d1214" stroke="#24303a" strokeWidth={2} />
         <motion.g
           style={{ originX: '50%', originY: '50%' }}
