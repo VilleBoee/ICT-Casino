@@ -11,10 +11,12 @@ export interface ReelProps {
   highlight: (row: number) => boolean
   dim: boolean
   onStop?: () => void
+  /** Fires when this reel lands (for the per-reel stop sound). */
+  onLand?: () => void
 }
 
 /** One reel: a strip that slides down... visually up, ending with its last 3 cells in the window. */
-export function Reel({ strip, spinKey, durationS, animate, highlight, dim, onStop }: ReelProps) {
+export function Reel({ strip, spinKey, durationS, animate, highlight, dim, onStop, onLand }: ReelProps) {
   const k = strip.length
   const end = `-${((k - 3) / k) * 100}%`
   const finalRows = strip.slice(-3)
@@ -28,7 +30,7 @@ export function Reel({ strip, spinKey, durationS, animate, highlight, dim, onSto
         initial={animate ? { y: '0%', filter: 'blur(0px)' } : { y: end }}
         animate={animate ? { y: end, filter: ['blur(0px)', 'blur(2px)', 'blur(0px)'] } : { y: end }}
         transition={animate ? { duration: durationS, ease: [0.25, 0.1, 0.2, 1.05] } : { duration: 0 }}
-        onAnimationComplete={() => onStop?.()}
+        onAnimationComplete={() => { onLand?.(); onStop?.() }}
       >
         {strip.map((s, i) => {
           const row = i - (k - 3)

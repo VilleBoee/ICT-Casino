@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { play } from '../app/sound'
 import type { Card as EngineCard, Rank, Suit } from '../engine/types'
 
 const RANK_LABEL: Record<Rank, string> = {
@@ -27,6 +29,17 @@ const SIZES = { sm: 'w-12 h-[4.5rem] text-sm', md: 'w-16 h-24 text-base', lg: 'w
 /** Playing card rendered from the engine `Card` type, with deal + flip animations. */
 export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highlight = false }: CardProps) {
   const reduce = useReducedMotion()
+  // deal swish timed with the deal animation; flip snap whenever faceDown changes
+  useEffect(() => {
+    if (reduce) return
+    const id = setTimeout(() => play('deal'), dealIndex * 120)
+    return () => clearTimeout(id)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const prevDown = useRef(faceDown)
+  useEffect(() => {
+    if (prevDown.current !== faceDown) play('flip')
+    prevDown.current = faceDown
+  }, [faceDown])
   const red = card.suit === 'H' || card.suit === 'D'
   const rank = RANK_LABEL[card.rank]
   const suit = SUIT_GLYPH[card.suit]

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { Card, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
+import { play } from '../../app/sound'
 import { HoldemTable, type PokerAction } from '../../engine/holdem'
 import type { Chips, RoundResult } from '../../engine/types'
 import { ActionBar } from './ActionBar'
@@ -12,6 +13,16 @@ import { blindSeats, seatPosition } from './layout'
 const BIG_BLIND = 20
 const BLIND_SCHEDULE = { everyHands: 10, factor: 1.5 } as const
 const STREET_PAUSE_MS = 600
+
+/** Chips for money in, a tick for checks, a card swish for folds. */
+function actionSound(type: PokerAction['type']) {
+  play(type === 'fold' ? 'flip' : type === 'check' ? 'tick' : 'chip')
+}
+/** Jingle if you won the hand that just ended. */
+function handOverSound(t: HoldemTable) {
+  if (t.phase !== 'handOver' || !t.lastHand) return
+  play((t.lastHand.won[0] ?? 0) > 0 ? 'win' : 'lose', { volume: 0.4 })
+}
 
 /** Plays out the hand (human folds) and cashes out, so leaving never strands chips. */
 function forceClose(t: HoldemTable) {
@@ -50,7 +61,7 @@ export default function HoldemGame() {
     const base = t.getState().botDelayMs
     const delay = (reduce ? 200 : base * (0.75 + Math.random() * 0.6)) + (newStreet && !reduce ? STREET_PAUSE_MS : 0)
     setThinking(seat)
-    const id = setTimeout(() => { t.botStep(); setThinking(null); bump() }, delay)
+    const id = setTimeout(() => { const mv = t.botStep(); if (mv) actionSound(mv.action.type); handOverSound(t); setThinking(null); bump() }, delay)
     return () => clearTimeout(id)
   }, [version, t, reduce])
 
@@ -68,7 +79,7 @@ export default function HoldemGame() {
   const act = useCallback((a: PokerAction) => {
     const tb = table.current
     if (!tb?.isHumanTurn) return
-    try { tb.act(a); setError(null) } catch (e) { setError((e as Error).message) }
+    try { tb.act(a); actionSound(a.type); handOverSound(tb); setError(null) } catch (e) { setError((e as Error).message) }
     bump()
   }, [])
 

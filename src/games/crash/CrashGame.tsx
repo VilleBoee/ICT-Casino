@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { BetPanel, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
+import { play } from '../../app/sound'
 import { CrashRound, timeForMultiplier, type CrashOutcome, type CrashStatus } from '../../engine/crash'
 import type { Chips, RoundResult } from '../../engine/types'
 import { VIEW_H, VIEW_W, curvePoints, fmtX, parseAuto, scales, toXY, yTicks } from './graph'
@@ -65,6 +66,7 @@ export default function CrashGame() {
       const ended = t >= r.crashTimeMs
       setView({ t: Math.min(t, r.crashTimeMs), m: multiplier, status, ended, cashedAt: r.cashedAt, bet: r.bet })
       if (ended) {
+        play('boom', { volume: r.cashedAt ? 0.3 : 0.8 }) // quieter if you already cashed out
         setHistory((h) => [r.result().outcome.crashPoint, ...h].slice(0, HISTORY))
         return
       }
@@ -194,7 +196,7 @@ export default function CrashGame() {
           </div>
         </div>
       </Table>
-      <ResultToast result={toast} message={toast ? (toast.outcome.cashedAt ? `cashed @ ${fmtX(toast.outcome.cashedAt)}` : `crashed @ ${fmtX(toast.outcome.crashPoint)}`) : undefined} onDismiss={() => setToast(null)} />
+      <ResultToast result={toast} message={toast ? (toast.outcome.cashedAt ? `cashed @ ${fmtX(toast.outcome.cashedAt)}` : `crashed @ ${fmtX(toast.outcome.crashPoint)}`) : undefined} onDismiss={() => setToast(null)} sound={!!toast?.outcome.cashedAt} />
     </div>
   )
 }

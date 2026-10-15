@@ -4,6 +4,7 @@ import { Chip, DENOMINATIONS, ResultToast, Table, type Denomination } from '../.
 import { colorOf, spin, type RouletteOutcome } from '../../engine/roulette'
 import type { RoundResult } from '../../engine/types'
 import { useWallet } from '../../app/wallet'
+import { play, stop as stopSfx } from '../../app/sound'
 import { BettingBoard } from './BettingBoard'
 import { Wheel } from './Wheel'
 import { spotKey, toEngineBets, totalOf, type BetMap, type Spot } from './bets'
@@ -48,6 +49,8 @@ export default function RouletteGame() {
     const r = pending.current
     if (!r) return
     pending.current = null
+    stopSfx('spin')
+    play('ball')
     wallet.settle(r)
     setShown(r.outcome.number)
     setHistory((h) => [r.outcome.number, ...h].slice(0, HISTORY))
@@ -61,6 +64,7 @@ export default function RouletteGame() {
     try { r = spin(wallet, toEngineBets(bets)) } catch (e) { setError((e as Error).message); return }
     setError(null)
     pending.current = r
+    play('spin')
     setLastBets(bets)
     setShown(null)
     setToast(null)

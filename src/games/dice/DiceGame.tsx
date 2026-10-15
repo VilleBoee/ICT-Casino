@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { animate, motion, useReducedMotion } from 'framer-motion'
 import { BetPanel, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
+import { play, stop as stopSfx } from '../../app/sound'
 import { rollDice, type DiceDirection, type DiceOutcome } from '../../engine/dice'
 import type { Chips, RoundResult } from '../../engine/types'
 import { clampTarget, mirrorTarget, preview, targetRange } from './odds'
@@ -34,6 +35,8 @@ export default function DiceGame() {
     const r = pending.current
     if (!r) return
     pending.current = null
+    stopSfx('spin')
+    play('ball')
     wallet.settle(r)
     setShown(r.outcome.roll)
     setLast(r)
@@ -48,6 +51,7 @@ export default function DiceGame() {
     try { r = rollDice(wallet, { amount: bet, target, direction }) } catch (e) { setError((e as Error).message); return }
     setError(null); setToast(null); setLastBet(bet); setLast(null)
     pending.current = r
+    play('spin', { rate: 2.4 })
     if (reduce) { settle(); return }
     setRolling(true)
     // ticker: scramble, then ease into the engine's roll

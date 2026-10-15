@@ -29,6 +29,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
   const cell = (s: Spot, label: React.ReactNode, cls: string, style?: React.CSSProperties, aria?: string) => (
     <button
       type="button"
+      data-sfx="chip"
       disabled={disabled}
       onClick={() => onPlace(s)}
       style={style}
@@ -61,6 +62,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
               <button
                 key={spotKey(spot)}
                 type="button"
+                data-sfx="chip"
                 disabled={disabled}
                 onClick={() => onPlace(spot)}
                 title={label}

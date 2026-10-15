@@ -36,6 +36,7 @@ export function Chip({ value, size = 48, selected = false, disabled = false, onC
       type="button"
       aria-label={`${value} chip`}
       aria-pressed={selected}
+      data-sfx="chip"
       disabled={disabled}
       onClick={onClick}
       className={`${cls} cursor-pointer disabled:cursor-not-allowed disabled:opacity-40`}

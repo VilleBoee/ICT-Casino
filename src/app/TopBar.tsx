@@ -1,12 +1,12 @@
-import { useState } from 'react'
 import { CountUp } from '../components'
 import { DAILY_REFILL } from '../engine'
 import { href } from './router'
 import { useWallet } from './wallet'
+import { useSound } from './sound'
 
 export function TopBar() {
   const { balance, canRefill, wallet } = useWallet()
-  const [muted, setMuted] = useState(true)
+  const { muted, toggleMute } = useSound()
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
@@ -28,7 +28,9 @@ export function TopBar() {
             className="btn-ghost px-3"
             aria-pressed={!muted}
             aria-label={muted ? 'Unmute sounds' : 'Mute sounds'}
-            onClick={() => setMuted((m) => !m)}
+            onClick={toggleMute}
+            data-sfx="none"
+            title={muted ? 'Sound off (saved)' : 'Sound on (saved)'}
           >
             {muted ? '🔇' : '🔊'}
           </button>
