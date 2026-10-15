@@ -56,7 +56,7 @@ export default function SlotsGame() {
     setRound(r)
     setSpinning(true)
     if (reduce) queueMicrotask(stop)
-  }, [wallet, lineBet, reduce, stop])
+  }, [wallet, lineBet, reduce, stop, t])
 
   // Auto-spin: next spin after a short pause; stops when the balance can't cover the stake.
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function SlotsGame() {
     if (balance < stake) { setAutoLeft(0); setError(t('sl.autoStopped')); return }
     const id = setTimeout(() => { setAutoLeft((n) => n - 1); spin() }, round ? (reduce ? 300 : 900) : 0)
     return () => clearTimeout(id)
-  }, [spinning, autoLeft, balance, stake, spin, round, reduce])
+  }, [spinning, autoLeft, balance, stake, spin, round, reduce, t])
 
   // Space / Enter on the page spins
   useEffect(() => {

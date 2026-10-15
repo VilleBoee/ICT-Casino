@@ -210,7 +210,7 @@ export default function HoldemGame() {
               handNo={t.handNo} />
               ))}
             </div>
-            <div className="rounded-[2rem] border-2 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_80%)] px-2 py-3">
+            <div className="rounded-[2rem] border-2 border-felt-edge bg-[radial-gradient(ellipse_at_center,var(--color-felt),var(--felt-deep)_80%)] px-2 py-3">
               {/* board + pot */}
           <div className={`flex flex-col items-center gap-2 ${compact ? 'py-1' : 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'}`} aria-label={tr('he.board')}>
             <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">
@@ -250,7 +250,7 @@ export default function HoldemGame() {
         ) : (
         <div className={`relative mx-auto aspect-[4/5] w-full max-w-4xl ${n >= 8 ? "sm:aspect-[4/3] lg:aspect-[16/10] lg:my-4" : "sm:aspect-[16/9]"}`}>
             {/* felt */}
-            <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
+            <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-felt-edge bg-[radial-gradient(ellipse_at_center,var(--color-felt),var(--felt-deep)_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
             {/* board + pot */}
             <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2" aria-label={tr('he.board')}>
               <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">

@@ -8,9 +8,9 @@ import { settings, useSettings } from './settings'
 
 export function TopBar() {
   const t = useT()
-  const { lang } = useSettings()
+  const { lang, theme } = useSettings()
   const { balance, canRefill, wallet } = useWallet()
-  const { muted, toggleMute } = useSound()
+  const { muted, volume, toggleMute, setVolume } = useSound()
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-3">
@@ -42,6 +42,15 @@ export function TopBar() {
           <button
             type="button"
             className="btn-ghost px-2 sm:px-3"
+            aria-label={theme === 'dark' ? t('top.toLight') : t('top.toDark')}
+            title={theme === 'dark' ? t('top.light') : t('top.dark')}
+            onClick={() => settings.toggleTheme()}
+          >
+            <span aria-hidden>{theme === 'dark' ? '☀' : '☾'}</span>
+          </button>
+          <button
+            type="button"
+            className="btn-ghost px-2 sm:px-3"
             aria-pressed={!muted}
             aria-label={muted ? t('top.unmute') : t('top.mute')}
             onClick={toggleMute}
@@ -50,6 +59,15 @@ export function TopBar() {
           >
             {muted ? '🔇' : '🔊'}
           </button>
+          <input
+            type="range" min={0} max={100} step={5}
+            value={Math.round(volume * 100)}
+            onChange={(e) => { setVolume(Number(e.target.value) / 100); if (muted && Number(e.target.value) > 0) toggleMute() }}
+            aria-label="Volume"
+            aria-valuetext={`${Math.round(volume * 100)}%`}
+            title={`Volume ${Math.round(volume * 100)}%`}
+            className="hidden w-20 accent-neon md:block"
+          />
           <div className="whitespace-nowrap rounded-md border border-neon/40 bg-surface px-2 py-1 shadow-glow-neon sm:px-3 sm:py-1.5" aria-live="polite">
             <span className="font-mono text-xs text-muted">$ </span>
             <CountUp value={balance} className="num text-lg font-semibold text-neon" />
