@@ -140,6 +140,29 @@ Built by a team of AI agents directed by Ville:
 
 **Workflow:** issues are tiered **P0 → P8** by build order (see [roadmap #34](../../issues/34)), and each issue lists what it depends on. Use one branch per issue (`feat/<issue>-name`) with a PR into `main` that has passing tests and build. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## `$ npm run sim`
+
+Seeded long runs of every game engine, measured vs theoretical house edge (edge = (staked − returned) / staked). The run is deterministic; change it with `SIM_SEED=1 SIM_SCALE=5 npm run sim`. `npm test` runs the exact and short Monte Carlo checks in `src/engine/house-edge.test.ts`.
+
+| Game | Bet | Rounds | Measured edge | Theoretical edge | Note |
+|---|---|---:|---:|---:|---|
+| Roulette | red/black | 1,000,000 | 2.76% | 2.70% |  |
+| Roulette | straight up | 1,000,000 | 3.53% | 2.70% |  |
+| Blackjack | basic strategy | 300,000 | 0.59% | 0.45% | theory ≈0.4-0.5% for 6D S17 DAS; per initial bet |
+| Slots | 10 lines | 1,000,000 | 4.14% | 4.48% |  |
+| Video Poker 9/6 | 5 coins (max-coin royal) | 500,000 | 2.52% | 0.46% | theory is optimal play; this sim uses a simple hold strategy (~2% worse) |
+| Video Poker 9/6 | 1-4 coins | 500,000 | 2.96% | 1.82% | theory is optimal play; this sim uses a simple hold strategy (~2% worse) |
+| Baccarat | banker | 1,000,000 | 1.01% | 1.06% |  |
+| Baccarat | player | 1,000,000 | 1.29% | 1.24% |  |
+| Baccarat | tie 8:1 | 1,000,000 | 14.32% | 14.36% |  |
+| Crash | cash out 2x | 1,000,000 | 1.00% | 1.00% |  |
+| Crash | cash out 10x | 1,000,000 | 0.84% | 1.00% |  |
+| Dice | under 50 | 1,000,000 | 0.94% | 1.00% |  |
+| Dice | under 10 | 1,000,000 | 1.00% | 1.00% |  |
+| Texas Hold'em | vs bots | - | - | 0.00% | no rake: chips only move between players |
+
+Notes: video poker theory is for optimal play (5 coins: 99.54% return thanks to the 4000-coin max-coin royal; 1-4 coins: 98.18%), and the simulator uses a simpler hold strategy. Gaps on high-variance bets (roulette straight up, crash 10x) are within a couple of standard errors at 1M rounds. Payouts are rounded down to whole chips, which adds a tiny extra edge on very small bets.
+
 ## `$ cat DISCLAIMER`
 
 ICT-Casino is for **entertainment and education only**. It uses virtual chips with no monetary value, which can't be bought, sold or cashed out. No real-money gambling is involved or encouraged. If gambling is a problem for you or someone you know, please seek support.
