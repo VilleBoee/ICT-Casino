@@ -3,6 +3,7 @@ import { gameById } from '../app/games'
 import { href } from '../app/router'
 import type { GameId } from '../engine/types'
 import NotFound from './NotFound'
+import VideoPokerGame from '../games/video-poker/VideoPokerGame'
 import BlackjackGame from '../games/blackjack/BlackjackGame'
 import SlotsGame from '../games/slots/SlotsGame'
 import BaccaratGame from '../games/baccarat/BaccaratGame'
@@ -12,7 +13,10 @@ import HoldemGame from '../games/holdem/HoldemGame'
 import RouletteGame from '../games/roulette/RouletteGame'
 
 /** Game UIs register here as they land (#12, #15, ...). */
-const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame, crash: CrashGame, dice: DiceGame, holdem: HoldemGame }
+
+
+/** Game UIs register here as they land (#12, #15, ...). */
+const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame, crash: CrashGame, dice: DiceGame, holdem: HoldemGame, videopoker: VideoPokerGame }
 
 export default function GamePage({ id }: { id: string }) {
   const game = gameById(id)
