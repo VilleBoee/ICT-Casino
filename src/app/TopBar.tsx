@@ -63,9 +63,9 @@ export function TopBar() {
             type="range" min={0} max={100} step={5}
             value={Math.round(volume * 100)}
             onChange={(e) => { setVolume(Number(e.target.value) / 100); if (muted && Number(e.target.value) > 0) toggleMute() }}
-            aria-label="Volume"
+            aria-label={t('top.volume')}
             aria-valuetext={`${Math.round(volume * 100)}%`}
-            title={`Volume ${Math.round(volume * 100)}%`}
+            title={t('top.volumeTitle', { n: Math.round(volume * 100) })}
             className="hidden w-20 accent-neon md:block"
           />
           <div className="whitespace-nowrap rounded-md border border-neon/40 bg-surface px-2 py-1 shadow-glow-neon sm:px-3 sm:py-1.5" aria-live="polite">

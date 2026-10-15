@@ -13,7 +13,6 @@ import { SeatView } from './SeatView'
 import { blindSeats, seatPosition } from './layout'
 import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 import { bestHand, type Card as CardT } from '../../engine'
-import { useSettings } from '../../app/settings'
 import { glows, handLabel, liveBest } from './bestHandUi'
 
 const BIG_BLIND = 20
@@ -41,7 +40,6 @@ function forceClose(t: HoldemTable) {
 export default function HoldemGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
-  const { lang } = useSettings()
   const tr = useT()
   const phone = useMediaQuery(PHONE)
   const narrow = useMediaQuery('(max-width: 1023.98px)')
@@ -91,7 +89,7 @@ export default function HoldemGame() {
     if (!tb?.isHumanTurn) return
     try { tb.act(a); actionSound(a.type); handOverSound(tb); setError(null) } catch (e) { setError(errorText(e, tr)) }
     bump()
-  }, [])
+  }, [tr])
 
   const nextHand = () => {
     if (!t) return
@@ -147,14 +145,14 @@ export default function HoldemGame() {
   const over = t.phase === 'handOver'
   const last = over ? t.lastHand : null
   // showdown labels (bots only appear here), localised from the best 5 of hole + board
-  const shown = new Map(last?.shown.map((s) => [s.seat, handLabel(bestHand([...s.hole, ...t.board]), lang)]) ?? [])
+  const shown = new Map(last?.shown.map((s) => [s.seat, handLabel(bestHand([...s.hole, ...t.board]), tr)]) ?? [])
   const winners = new Set(last?.pots.flatMap((p) => p.winners) ?? [])
   const { sb, bb } = blindSeats(t.dealer, n)
   const pots = t.pots
   const human = t.human
   // live best hand for you, every street (hidden once you fold)
   const best = !human.folded ? liveBest(human.hole, t.board) : null
-  const badge = best ? handLabel(best, lang) : undefined
+  const badge = best ? handLabel(best, tr) : undefined
   const glow = (c: CardT) => glows(best, t.board, c)
   const net = human.stack - t.totalBuyIn
   const topWin = last?.pots[0]
