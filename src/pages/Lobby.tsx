@@ -11,7 +11,7 @@ export default function Lobby() {
           <span className="text-neon">ville@ict</span>:<span className="text-cyan">~/casino</span>$ ls games/
         </p>
         <h1>Lobby</h1>
-        <p className="text-muted">Play money only, saved in your browser. No servers.</p>
+        <p className="text-muted">Play money only, saved in your browser. No servers. <a href={href('/stats')}>View your stats →</a></p>
       </header>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {GAMES.map((g, i) => (

@@ -5,9 +5,11 @@ import DevPage from './pages/DevPage'
 import GamePage from './pages/GamePage'
 import Lobby from './pages/Lobby'
 import NotFound from './pages/NotFound'
+import StatsPage from './pages/StatsPage'
 
 function route(path: string) {
   if (path === '/') return <Lobby />
+  if (path === '/stats') return <StatsPage />
   if (path === '/dev') return <DevPage />
   const m = path.match(/^\/game\/([\w-]+)$/)
   if (m) return <GamePage id={m[1]} />
