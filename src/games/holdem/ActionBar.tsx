@@ -37,7 +37,7 @@ export function ActionBar({ legal, currentBet, pot, stack, onAct }: ActionBarPro
       {r && r.max > r.min && (
         <div className="flex flex-wrap items-center gap-2">
           <input type="range" min={r.min} max={r.max} step={1} value={val} onChange={(e) => setTo(Number(e.target.value))}
-            className="min-w-40 flex-1 accent-[#39ff88] pointer-coarse:h-11" aria-label={`${r.kind} amount`} aria-valuetext={`${val} chips`} />
+            className="min-w-40 flex-1 accent-neon pointer-coarse:h-11" aria-label={`${r.kind} amount`} aria-valuetext={`${val} chips`} />
           <input type="number" min={r.min} max={r.max} value={val} onChange={(e) => setTo(Number(e.target.value))}
             className="num w-24 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg" aria-label="Exact amount" />
           <button type="button" className="btn-ghost px-2 text-xs" onClick={() => setTo(r.min)}>Min</button>

@@ -62,8 +62,8 @@ export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highl
         transition={reduce ? { duration: 0 } : { duration: 0.45, ease: 'easeInOut' }}
       >
         <div
-          className={`${face} overflow-hidden bg-fg font-mono font-bold leading-none ${
-            red ? 'text-[#c81e3a]' : 'text-bg'
+          className={`${face} overflow-hidden bg-card font-mono font-bold leading-none ${
+            red ? 'text-[#c81e3a]' : 'text-card-ink'
           } ${highlight ? 'border-neon shadow-glow-neon' : 'border-border'}`}
         >
           {/* corners are absolutely placed in em/% of the card, so they stay inside at every size (sm..lg) */}

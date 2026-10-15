@@ -20,12 +20,13 @@ export interface ChipProps {
 export function Chip({ value, size = 48, selected = false, disabled = false, onClick }: ChipProps) {
   const reduce = useReducedMotion()
   const color = CHIP_COLOR[value]
+  // chips keep a dark centre in both themes (physical object, and the coloured value text needs it for contrast)
   const style = {
     width: size, height: size, fontSize: size * 0.28, color,
     background: `repeating-conic-gradient(${color} 0 15deg, #0d1214 15deg 30deg)`,
   }
   const inner = (
-    <span className="grid h-[72%] w-[72%] place-items-center rounded-full border-2 bg-surface font-mono font-extrabold" style={{ borderColor: color }}>
+    <span className="grid h-[72%] w-[72%] place-items-center rounded-full border-2 bg-[#0d1214] font-mono font-extrabold" style={{ borderColor: color }}>
       {fmtChips(value)}
     </span>
   )

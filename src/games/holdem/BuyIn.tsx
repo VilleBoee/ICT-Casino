@@ -34,7 +34,7 @@ export function BuyIn({ balance, bigBlind, onSit, error, lastSession }: BuyInPro
           <label className="block space-y-2">
             <span className="flex justify-between font-mono text-sm"><span className="text-muted">Buy-in</span><span className="num text-neon">{value}</span></span>
             <input type="range" min={min} max={max} step={bigBlind} value={value} onChange={(e) => setBuyIn(Number(e.target.value))}
-              className="w-full accent-[#39ff88] pointer-coarse:h-11" aria-valuetext={`${value} chips`} />
+              className="w-full accent-neon pointer-coarse:h-11" aria-valuetext={`${value} chips`} />
           </label>
           <fieldset className="space-y-2">
             <legend className="font-mono text-sm text-muted">Opponents</legend>
@@ -46,7 +46,7 @@ export function BuyIn({ balance, bigBlind, onSit, error, lastSession }: BuyInPro
             </div>
           </fieldset>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={rising} onChange={(e) => setRising(e.target.checked)} className="accent-[#39ff88]" />
+            <input type="checkbox" checked={rising} onChange={(e) => setRising(e.target.checked)} className="accent-neon" />
             Rising blinds <span className="text-muted">(×1.5 every 10 hands)</span>
           </label>
           <button type="button" className="btn-primary w-full" onClick={() => onSit(value, bots, rising)}>Sit down with {value}</button>

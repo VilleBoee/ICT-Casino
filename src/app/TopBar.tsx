@@ -3,10 +3,12 @@ import { DAILY_REFILL } from '../engine'
 import { href } from './router'
 import { useWallet } from './wallet'
 import { useSound } from './sound'
+import { settings, useSettings } from './settings'
 
 export function TopBar() {
   const { balance, canRefill, wallet } = useWallet()
   const { muted, volume, toggleMute, setVolume } = useSound()
+  const { theme } = useSettings()
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-3">
@@ -24,6 +26,15 @@ export function TopBar() {
             title={canRefill ? `Claim ${DAILY_REFILL} free chips` : 'Daily refill already claimed'}
           >
             {canRefill ? <>+{DAILY_REFILL}<span className="hidden sm:inline"> daily</span></> : <><span className="hidden sm:inline">refill </span>✓</>}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost px-2 sm:px-3"
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            onClick={() => settings.toggleTheme()}
+          >
+            <span aria-hidden>{theme === 'dark' ? '☀' : '☾'}</span>
           </button>
           <button
             type="button"
