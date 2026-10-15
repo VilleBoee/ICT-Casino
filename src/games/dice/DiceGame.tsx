@@ -64,7 +64,7 @@ export default function DiceGame() {
       onUpdate: (k) => setShown(k < 0.55 ? Math.floor(Math.random() * 10000) / 100 : from + (r.outcome.roll - from) * ((k - 0.55) / 0.45)),
       onComplete: settle,
     })
-  }, [wallet, bet, target, direction, reduce, settle, shown])
+  }, [wallet, bet, target, direction, reduce, settle, shown, t])
 
   // Space rolls
   useEffect(() => {
