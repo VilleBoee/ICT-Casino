@@ -35,7 +35,7 @@ export default function App() {
         {route(path)}
       </main>
       <footer className="mx-auto max-w-6xl px-4 pb-8 font-mono text-xs text-muted">
-        play money only · stored in localStorage · <a href="#/dev">/dev</a>
+        play money only · stored in localStorage · <a href="#/dev" className="inline-block pointer-coarse:px-2 pointer-coarse:py-3">/dev</a>
       </footer>
     </>
   )

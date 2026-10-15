@@ -124,7 +124,7 @@ export default function DiceGame() {
             <input type="range" min={0} max={100} step={0.01} value={target} disabled={rolling}
               onChange={(e) => setTarget(clampTarget(Number(e.target.value), direction))}
               aria-label={`Target: roll ${direction}`} aria-valuetext={`${direction} ${fmt(target)}, ${p.chance}% chance`}
-              className="absolute inset-x-0 bottom-[-6px] h-6 w-full cursor-pointer appearance-none bg-transparent accent-[#39ff88] disabled:cursor-not-allowed" />
+              className="absolute inset-x-0 bottom-[-6px] h-6 w-full pointer-coarse:bottom-[-16px] pointer-coarse:h-11 cursor-pointer appearance-none bg-transparent accent-[#39ff88] disabled:cursor-not-allowed" />
             <div className="mt-3 flex justify-between font-mono text-[10px] text-muted"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
           </div>
 

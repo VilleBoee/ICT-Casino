@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
+import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 import { Card, CountUp, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
 import { VideoPokerRound, type VideoPokerOutcome, type VpHand } from '../../engine/videopoker'
@@ -16,6 +17,8 @@ interface Slot { card: EngineCard; faceDown: boolean }
 export default function VideoPokerGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  // phones: only the current coin column of the paytable, and smaller cards so 5 fit in 360px
+  const phone = useMediaQuery(PHONE)
   const [coins, setCoins] = useState<number>(5)
   const [coinValue, setCoinValue] = useState<Chips>(1)
   const [phase, setPhase] = useState<Phase>('idle')
@@ -155,12 +158,12 @@ export default function VideoPokerGame() {
         <div className="space-y-6">
           {/* paytable */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] border-collapse font-mono text-xs sm:text-sm" aria-label="Paytable">
+            <table className="w-full border-collapse sm:min-w-[420px] font-mono text-xs sm:text-sm" aria-label="Paytable">
               <thead>
                 <tr className="text-muted">
                   <th className="px-2 py-1 text-left font-normal">hand</th>
                   {COINS.map((c) => (
-                    <th key={c} scope="col" className={`px-2 py-1 text-right font-normal ${c === coins ? 'bg-cyan/15 text-cyan' : ''}`}>{c} coin{c > 1 && 's'}</th>
+                    <th key={c} scope="col" className={`px-2 py-1 text-right font-normal ${c === coins ? 'bg-cyan/15 text-cyan' : 'hidden sm:table-cell'}`}>{c} coin{c > 1 && 's'}</th>
                   ))}
                 </tr>
               </thead>
@@ -173,7 +176,7 @@ export default function VideoPokerGame() {
                       className={`border-t border-border/60 transition-colors ${win ? 'bg-win/20 text-win' : on ? 'bg-neon/10 text-neon' : 'text-fg'}`}>
                       <th scope="row" className="px-2 py-1 text-left font-semibold">{h}{win && ' ◀'}</th>
                       {COINS.map((c) => (
-                        <td key={c} className={`num px-2 py-1 text-right ${c === coins ? (win ? 'bg-win/25 font-bold' : 'bg-cyan/10') : ''}`}>{payFor(h, c)}</td>
+                        <td key={c} className={`num px-2 py-1 text-right ${c === coins ? (win ? 'bg-win/25 font-bold' : 'bg-cyan/10') : 'hidden sm:table-cell'}`}>{payFor(h, c)}</td>
                       ))}
                     </tr>
                   )
@@ -192,7 +195,7 @@ export default function VideoPokerGame() {
                   <button type="button" onClick={() => toggle(i)} disabled={phase !== 'hold'} aria-pressed={held[i]}
                     aria-label={`Card ${i + 1}${held[i] ? ', held' : ''}`}
                     className={`rounded-md transition-transform disabled:cursor-default ${held[i] ? '-translate-y-2 ring-2 ring-neon ring-offset-2 ring-offset-bg' : ''}`}>
-                    <Card card={s.card} faceDown={s.faceDown} size="lg" dealIndex={i}
+                    <Card card={s.card} faceDown={s.faceDown} size={phone ? 'sm' : 'lg'} dealIndex={i}
                       highlight={phase === 'done' && !!final && final.payout > 0} />
                   </button>
                   <kbd className="font-mono text-[10px] text-muted">{i + 1}</kbd>
