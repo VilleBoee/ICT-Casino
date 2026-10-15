@@ -4,7 +4,7 @@ import type { Chips } from '../../engine/types'
 export interface BuyInProps {
   balance: Chips
   bigBlind: Chips
-  onSit: (buyIn: Chips, bots: number) => void
+  onSit: (buyIn: Chips, bots: number, risingBlinds: boolean) => void
   error?: string | null
   lastSession?: { hands: number; net: Chips } | null
 }
@@ -14,6 +14,7 @@ export function BuyIn({ balance, bigBlind, onSit, error, lastSession }: BuyInPro
   const max = Math.min(balance, bigBlind * 100)
   const [buyIn, setBuyIn] = useState(() => Math.max(min, Math.min(max, bigBlind * 50)))
   const [bots, setBots] = useState(5)
+  const [rising, setRising] = useState(false)
   const can = balance >= min
   const value = Math.max(min, Math.min(max, buyIn))
   return (
@@ -44,7 +45,11 @@ export function BuyIn({ balance, bigBlind, onSit, error, lastSession }: BuyInPro
               ))}
             </div>
           </fieldset>
-          <button type="button" className="btn-primary w-full" onClick={() => onSit(value, bots)}>Sit down with {value}</button>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={rising} onChange={(e) => setRising(e.target.checked)} className="accent-[#39ff88]" />
+            Rising blinds <span className="text-muted">(×1.5 every 10 hands)</span>
+          </label>
+          <button type="button" className="btn-primary w-full" onClick={() => onSit(value, bots, rising)}>Sit down with {value}</button>
         </>
       ) : (
         <p className="text-warn">You need at least {min} chips to sit down. Claim the daily refill in the top bar.</p>

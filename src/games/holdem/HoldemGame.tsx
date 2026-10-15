@@ -10,7 +10,7 @@ import { SeatView } from './SeatView'
 import { blindSeats, seatPosition } from './layout'
 
 const BIG_BLIND = 20
-const THINK_MS = [700, 1300] as const
+const BLIND_SCHEDULE = { everyHands: 10, factor: 1.5 } as const
 const STREET_PAUSE_MS = 600
 
 /** Plays out the hand (human folds) and cashes out, so leaving never strands chips. */
@@ -46,16 +46,17 @@ export default function HoldemGame() {
     const seat = t.toAct!
     const newStreet = t.board.length !== boardLen.current
     boardLen.current = t.board.length
-    const [lo, hi] = THINK_MS
-    const delay = (reduce ? 200 : lo + Math.random() * (hi - lo)) + (newStreet && !reduce ? STREET_PAUSE_MS : 0)
+    // engine suggests the pause; add a little jitter so bots don't feel robotic
+    const base = t.getState().botDelayMs
+    const delay = (reduce ? 200 : base * (0.75 + Math.random() * 0.6)) + (newStreet && !reduce ? STREET_PAUSE_MS : 0)
     setThinking(seat)
     const id = setTimeout(() => { t.botStep(); setThinking(null); bump() }, delay)
     return () => clearTimeout(id)
   }, [version, t, reduce])
 
-  const sit = (buyIn: Chips, bots: number) => {
+  const sit = (buyIn: Chips, bots: number, rising: boolean) => {
     try {
-      const tb = new HoldemTable(wallet, { buyIn, bots, bigBlind: BIG_BLIND })
+      const tb = new HoldemTable(wallet, { buyIn, bots, bigBlind: BIG_BLIND, ...(rising ? { blindSchedule: BLIND_SCHEDULE } : {}) })
       table.current = tb
       boardLen.current = 0
       tb.startHand()
@@ -129,12 +130,16 @@ export default function HoldemGame() {
   const human = t.human
   const net = human.stack - t.totalBuyIn
   const topWin = last?.pots[0]
+  const sched = t.blindSchedule
+  const blindInfo = sched
+    ? ` · level ${Math.floor((t.handNo - 1) / sched.everyHands) + 1} (up in ${sched.everyHands - ((t.handNo - 1) % sched.everyHands)})`
+    : ''
 
   return (
     <div className="space-y-4">
       <Table
         title="holdem.tsx"
-        subtitle={`NL ${t.smallBlind}/${t.bigBlind} · hand #${t.handNo} · ${t.phase === 'handOver' ? 'hand over' : t.phase}`}
+        subtitle={`NL ${t.smallBlind}/${t.bigBlind}${blindInfo} · hand #${t.handNo} · ${t.phase === 'handOver' ? 'hand over' : t.phase}`}
         actions={
           <span className="font-mono text-xs">
             <span className="text-muted">session </span>
