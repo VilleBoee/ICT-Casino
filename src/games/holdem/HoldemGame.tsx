@@ -10,6 +10,9 @@ import { BuyIn } from './BuyIn'
 import { SeatView } from './SeatView'
 import { blindSeats, seatPosition } from './layout'
 import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
+import { bestHand, type Card as CardT } from '../../engine'
+import { useSettings } from '../../app/settings'
+import { glows, handLabel, liveBest } from './bestHandUi'
 
 const BIG_BLIND = 20
 const BLIND_SCHEDULE = { everyHands: 10, factor: 1.5 } as const
@@ -36,6 +39,7 @@ function forceClose(t: HoldemTable) {
 export default function HoldemGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const { lang } = useSettings()
   const phone = useMediaQuery(PHONE)
   const narrow = useMediaQuery('(max-width: 1023.98px)')
   const table = useRef<HoldemTable | null>(null)
@@ -139,11 +143,16 @@ export default function HoldemGame() {
   const compact = phone || (narrow && n >= 9)
   const over = t.phase === 'handOver'
   const last = over ? t.lastHand : null
-  const shown = new Map(last?.shown.map((s) => [s.seat, s.hand.name]) ?? [])
+  // showdown labels (bots only appear here), localised from the best 5 of hole + board
+  const shown = new Map(last?.shown.map((s) => [s.seat, handLabel(bestHand([...s.hole, ...t.board]), lang)]) ?? [])
   const winners = new Set(last?.pots.flatMap((p) => p.winners) ?? [])
   const { sb, bb } = blindSeats(t.dealer, n)
   const pots = t.pots
   const human = t.human
+  // live best hand for you, every street (hidden once you fold)
+  const best = !human.folded ? liveBest(human.hole, t.board) : null
+  const badge = best ? handLabel(best, lang) : undefined
+  const glow = (c: CardT) => glows(best, t.board, c)
   const net = human.stack - t.totalBuyIn
   const topWin = last?.pots[0]
   const sched = t.blindSchedule
@@ -219,8 +228,8 @@ export default function HoldemGame() {
             </div>
             <div className="flex min-h-[4.5rem] gap-1" key={t.handNo}>
               {t.board.map((c, i) => (
-                <Card key={i} card={c} size="sm" dealIndex={i < 3 ? i : 0}
-                  highlight={false} />
+                <div key={i} className={`transition-transform duration-200 ${glow(c) ? '-translate-y-1' : ''}`}><Card card={c} size="sm" dealIndex={i < 3 ? i : 0}
+                  highlight={glow(c)} /></div>
               ))}
             </div>
             {over && topWin && (
@@ -241,6 +250,7 @@ export default function HoldemGame() {
               reveal={over && shown.has(0)}
               winner={over && winners.has(0)}
               handName={over ? shown.get(0) : undefined}
+              badge={badge} glow={glow}
               won={over ? last?.won[0] : undefined}
               handNo={t.handNo} />
           </div>
@@ -259,8 +269,8 @@ export default function HoldemGame() {
               </div>
               <div className="flex min-h-[4.5rem] gap-1" key={t.handNo}>
                 {t.board.map((c, i) => (
-                  <Card key={i} card={c} size="sm" dealIndex={i < 3 ? i : 0}
-                    highlight={false} />
+                  <div key={i} className={`transition-transform duration-200 ${glow(c) ? '-translate-y-1' : ''}`}><Card card={c} size="sm" dealIndex={i < 3 ? i : 0}
+                    highlight={glow(c)} /></div>
                 ))}
               </div>
               {over && topWin && (
@@ -284,6 +294,7 @@ export default function HoldemGame() {
                 reveal={over && shown.has(s.index)}
                 winner={over && winners.has(s.index)}
                 handName={over ? shown.get(s.index) : undefined}
+                badge={s.human ? badge : undefined} glow={s.human ? glow : undefined}
                 won={over ? last?.won[s.index] : undefined}
                 handNo={t.handNo}
               />
