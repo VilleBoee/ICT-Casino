@@ -29,7 +29,7 @@ export function Table({ title, subtitle, actions, footer, children }: TableProps
         className="relative min-h-64 p-3 sm:p-6"
         style={{
           background:
-            'radial-gradient(ellipse at center, rgb(16 80 52 / .55), rgb(7 9 10 / .9) 75%), linear-gradient(rgb(57 255 136 / .05) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgb(57 255 136 / .05) 1px, transparent 1px) 0 0 / 24px 24px',
+            'radial-gradient(ellipse at center, var(--felt-glow), var(--felt-fade) 75%), linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px',
         }}
       >
         {children}

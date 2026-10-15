@@ -152,8 +152,8 @@ export default function CrashGame() {
                 const y = toXY(0, v, s).y
                 return (
                   <g key={v}>
-                    <line x1={0} x2={VIEW_W} y1={y} y2={y} stroke="#24303a" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />
-                    <text x={6} y={y - 3} fill="#93a1ad" fontSize={11}>{fmtX(v)}</text>
+                    <line x1={0} x2={VIEW_W} y1={y} y2={y} stroke="var(--color-border)" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />
+                    <text x={6} y={y - 3} fill="var(--color-muted)" fontSize={11}>{fmtX(v)}</text>
                   </g>
                 )
               })}
@@ -162,16 +162,16 @@ export default function CrashGame() {
                   <polyline points={`${curvePoints(view.t, crashedOut ? m : Infinity)} ${tip.x},${VIEW_H} 0,${VIEW_H}`}
                     fill={crashedOut && !cashedAt ? 'rgb(248 113 113 / .08)' : 'rgb(57 255 136 / .08)'} stroke="none" />
                   <polyline points={curvePoints(view.t, crashedOut ? m : Infinity)} fill="none"
-                    stroke={crashedOut ? '#f87171' : '#39ff88'} strokeWidth={3} vectorEffect="non-scaling-stroke"
-                    style={{ filter: `drop-shadow(0 0 6px ${crashedOut ? '#f87171' : '#39ff88'})` }} />
+                    stroke={crashedOut ? 'var(--color-lose)' : 'var(--color-neon)'} strokeWidth={3} vectorEffect="non-scaling-stroke"
+                    style={{ filter: `drop-shadow(0 0 6px ${crashedOut ? 'var(--color-lose)' : 'var(--color-neon)'})` }} />
                   {cashedAt && (() => {
                     const c = toXY(timeForMultiplier(cashedAt), cashedAt, s)
-                    return <circle cx={c.x} cy={c.y} r={5} fill="#4ade80" vectorEffect="non-scaling-stroke" />
+                    return <circle cx={c.x} cy={c.y} r={5} fill="var(--color-win)" vectorEffect="non-scaling-stroke" />
                   })()}
                   {crashedOut ? (
-                    <motion.circle cx={tip.x} cy={tip.y} fill="#f87171" initial={{ r: 4, opacity: 1 }} animate={{ r: 60, opacity: 0 }} transition={{ duration: 0.6 }} />
+                    <motion.circle cx={tip.x} cy={tip.y} fill="var(--color-lose)" initial={{ r: 4, opacity: 1 }} animate={{ r: 60, opacity: 0 }} transition={{ duration: 0.6 }} />
                   ) : (
-                    <circle cx={tip.x} cy={tip.y} r={5} fill="#39ff88" />
+                    <circle cx={tip.x} cy={tip.y} r={5} fill="var(--color-neon)" />
                   )}
                 </>
               )}

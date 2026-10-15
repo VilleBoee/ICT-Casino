@@ -19,6 +19,11 @@
   --color-win: #4ade80;
   --color-lose: #f87171;
   --color-warn: #fbbf24;
+  /* playing-card face + ink, felt (tables) */
+  --color-card: #e6edf3;
+  --color-card-ink: #07090a;
+  --color-felt: #0f3b28;
+  --color-felt-edge: #1c3a2c;
 
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -28,14 +33,59 @@
   --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
+/* Non-utility theme vars (used from inline styles / SVG). */
+:root {
+  --felt-glow: rgb(16 80 52 / .55);
+  --felt-fade: rgb(7 9 10 / .9);
+  --felt-deep: #08160f;
+  --grid-line: rgb(57 255 136 / .05);
+  --page-grid: rgb(57 255 136 / 0.04);
+  --page-glow: rgb(34 211 238 / 0.06);
+}
+
+/*
+ * Light theme (#71): a professional light-IDE palette. All text tokens meet WCAG AA (>= 4.5:1)
+ * on bg, surface and surface-2; accents are darkened so they stay readable on white.
+ */
+[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef1f4;
+  --color-border: #c8d1da;
+  --color-fg: #1f2328;
+  --color-muted: #57606a;
+  --color-neon: #0a7a3c;
+  --color-cyan: #0b63a3;
+  --color-win: #116b35;
+  --color-lose: #b42228;
+  --color-warn: #7d5200;
+  --color-card: #ffffff;
+  --color-card-ink: #1f2328;
+  --color-felt: #d7ecdf;
+  --color-felt-edge: #9cc4ab;
+  --shadow-glow-neon: 0 0 0 1px rgb(10 122 60 / 0.4), 0 2px 10px rgb(10 122 60 / 0.15);
+  --shadow-glow-cyan: 0 0 0 1px rgb(11 99 163 / 0.4), 0 2px 10px rgb(11 99 163 / 0.15);
+  --shadow-panel: 0 1px 2px rgb(31 35 40 / 0.06), 0 6px 20px rgb(31 35 40 / 0.07);
+  --felt-glow: rgb(215 236 223 / .95);
+  --felt-fade: rgb(238 245 240 / .95);
+  --felt-deep: #eaf4ee;
+  --grid-line: rgb(10 122 60 / .06);
+  --page-grid: rgb(31 35 40 / 0.035);
+  --page-glow: rgb(11 99 163 / 0.05);
+}
+[data-theme='light'] body::after { display: none; } /* no CRT scanlines in light mode */
+[data-theme='light'] .text-glow { text-shadow: none; }
+
 @layer base {
   html { color-scheme: dark; }
+  html[data-theme='light'] { color-scheme: light; }
   body {
     @apply min-h-dvh bg-bg font-sans text-fg antialiased;
     background-image:
-      radial-gradient(ellipse at top, rgb(34 211 238 / 0.06), transparent 60%),
-      linear-gradient(rgb(57 255 136 / 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(57 255 136 / 0.04) 1px, transparent 1px);
+      radial-gradient(ellipse at top, var(--page-glow), transparent 60%),
+      linear-gradient(var(--page-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--page-grid) 1px, transparent 1px);
     background-size: 100% 100%, 32px 32px, 32px 32px;
     background-attachment: fixed;
   }
