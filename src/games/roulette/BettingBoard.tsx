@@ -26,7 +26,8 @@ function Marker({ amount, won }: { amount?: number; won?: boolean }) {
 /** European betting layout: 0, 1–36 grid, columns, dozens, even-money bets, plus every inside bet
  *  (splits, streets, corners, six-lines, zero splits, trios, first four) as hit-spots over the grid. */
 export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
-  // Phones (and touch tablets) get the vertical table (0 on top, 12 rows of 3) with 64px rows and 32px inside-bet spots.
+  // Phones (and touch tablets) get the vertical table (0 on top, 12 rows of 3) with 88px rows and 44px inside-bet hit areas
+  // (splits sit half a row from corners/streets, so 88px rows keep neighbouring 44px targets from overlapping).
   const vertical = useMediaQuery(`${PHONE}, (pointer: coarse) and (max-width: 1023.98px)`)
   /** Grid placement for number n (1–36). */
   const numPos = (n: number): React.CSSProperties => {
@@ -45,7 +46,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
       onClick={() => onPlace(s)}
       style={style}
       aria-label={`${aria ?? String(label)}${amt(s) ? `, ${amt(s)} bet` : ''}${winning !== null && amt(s) && spotWins(s, winning) ? ', winner' : ''}`}
-      className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid ${vertical ? 'min-h-16' : 'min-h-10'} place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
+      className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid ${vertical ? (s.kind === 'straight' && s.number !== 0 ? 'min-h-[88px]' : 'min-h-16') : 'min-h-10'} place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
     >
       {label}
       <Marker amount={amt(s)} won={winning !== null && spotWins(s, winning)} />
@@ -79,14 +80,17 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
                 title={label}
                 aria-label={`${label}${a ? `, ${a} bet` : ''}${won && a ? ', winner' : ''}`}
                 style={spotPos(x, y)}
-                className={`group pointer-events-auto absolute z-10 grid ${vertical ? 'h-8 w-8' : 'h-4 w-4'} -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
-                  a ? '' : 'hover:bg-cyan/80 focus-visible:bg-cyan/80'
+                className={`group pointer-events-auto absolute z-10 grid ${vertical ? 'h-11 w-11' : 'h-4 w-4'} -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
+                  a || vertical ? '' : 'hover:bg-cyan/80 focus-visible:bg-cyan/80'
                 }`}
               >
                 {a ? (
                   <span className={`grid h-6 min-w-6 place-items-center rounded-full border-2 bg-bg px-1 font-mono text-[10px] font-bold ${
                     won ? 'border-win text-win shadow-[0_0_12px_rgb(74_222_128/.7)]' : 'border-cyan text-cyan shadow-glow-cyan'
                   }`}>{fmtChips(a)}</span>
+                ) : vertical ? (
+                  // invisible 44px hit area, small visible marker
+                  <span aria-hidden className="h-5 w-5 rounded-full border border-cyan/30 bg-cyan/10 group-hover:bg-cyan/80 group-focus-visible:bg-cyan/80 group-active:bg-cyan/80" />
                 ) : null}
               </button>
             )
