@@ -1,9 +1,28 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { Card } from '../../components'
 import type { Seat } from '../../engine/holdem'
+import type { Card as CardT } from '../../engine'
 import { useT, type Key, type T } from '../../i18n'
 
 const STYLE_TAG = { tight: 'text-cyan border-cyan/50', loose: 'text-warn border-warn/50', bluffer: 'text-[#c084fc] border-[#c084fc]/50' } as const
+
+/** Small lift for cards that make the best hand. */
+function Lift({ on, children }: { on: boolean; children: React.ReactNode }) {
+  return <div className={`transition-transform duration-200 ${on ? '-translate-y-1' : ''}`}>{children}</div>
+}
+
+/** Live "your best hand" pill; pops in when the label changes (no animation under reduced motion). */
+export function HandBadge({ label }: { label: string }) {
+  const reduce = useReducedMotion()
+  return (
+    <motion.span key={label} role="status" aria-live="polite" data-testid="best-hand"
+      initial={reduce ? false : { opacity: 0, scale: 0.85, y: 4 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 24 }}
+      className="whitespace-nowrap rounded-full border border-neon/60 bg-bg/90 px-2 py-0.5 font-mono text-[11px] font-semibold text-neon shadow-glow-neon">
+      {label}
+    </motion.span>
+  )
+}
 
 export interface SeatViewProps {
   seat: Seat
@@ -15,6 +34,10 @@ export interface SeatViewProps {
   reveal: boolean
   winner: boolean
   handName?: string
+  /** Live best-hand label (the human's seat only). */
+  badge?: string
+  /** Which of this seat's hole cards are part of the best hand (glow + lift). */
+  glow?: (c: CardT) => boolean
   won?: number
   handNo: number
   /** Phone layout: a static list row instead of a seat on the oval. */
@@ -59,9 +82,10 @@ function CompactSeat(props: SeatViewProps) {
         {won ? <span className="num rounded-full bg-win px-1.5 text-[10px] font-bold text-bg">+{won}</span> : null}
       </div>
       <p className="h-4 truncate font-mono text-[10px] text-muted">{statusLine(props, t)}</p>
+      {props.badge && <div className="mt-1 flex justify-center"><HandBadge label={props.badge} /></div>}
       {faceUp && seat.hole.length > 0 && (
         <div className="mt-1 flex justify-center gap-1" key={handNo}>
-          {seat.hole.map((c, i) => <Card key={i} card={c} size={seat.human ? 'md' : 'sm'} dealIndex={i} highlight={winner && reveal} />)}
+          {seat.hole.map((c, i) => <Lift key={i} on={!!props.glow?.(c)}><Card card={c} size={seat.human ? 'md' : 'sm'} dealIndex={i} highlight={(winner && reveal) || !!props.glow?.(c)} /></Lift>)}
         </div>
       )}
     </div>
@@ -81,7 +105,7 @@ function OvalSeat(props: SeatViewProps) {
         {/* hole cards */}
         <div className={`flex h-14 gap-0.5 sm:h-[4.5rem] ${out ? 'opacity-30' : ''}`} key={handNo}>
           {seat.hole.map((c, i) => (
-            <Card key={i} card={c} size="sm" faceDown={!faceUp} dealIndex={seat.index + i * 4} highlight={winner && reveal} />
+            <Lift key={i} on={!!props.glow?.(c)}><Card card={c} size="sm" faceDown={!faceUp} dealIndex={seat.index + i * 4} highlight={(winner && reveal) || !!props.glow?.(c)} /></Lift>
           ))}
         </div>
         <motion.div
@@ -101,6 +125,7 @@ function OvalSeat(props: SeatViewProps) {
         {blind && <span className="absolute -left-2 top-12 rounded bg-surface-2 px-1 font-mono text-[9px] text-cyan sm:top-16">{blind}</span>}
         {seat.bet > 0 && <span className="num rounded-full border border-neon/50 bg-bg px-2 text-[11px] text-neon">{seat.bet}</span>}
         {won ? <span className="num rounded-full bg-win px-2 text-[11px] font-bold text-bg">+{won}</span> : null}
+        {props.badge && <HandBadge label={props.badge} />}
       </div>
     </div>
   )
