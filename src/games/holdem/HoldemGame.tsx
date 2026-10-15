@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useT, type Key } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { useReducedMotion } from 'framer-motion'
 import { Card, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
@@ -40,6 +42,7 @@ export default function HoldemGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
   const { lang } = useSettings()
+  const tr = useT()
   const phone = useMediaQuery(PHONE)
   const narrow = useMediaQuery('(max-width: 1023.98px)')
   const table = useRef<HoldemTable | null>(null)
@@ -80,19 +83,19 @@ export default function HoldemGame() {
       tb.startHand()
       setError(null); setToast(null)
       bump()
-    } catch (e) { setError((e as Error).message) }
+    } catch (e) { setError(errorText(e, tr)) }
   }
 
   const act = useCallback((a: PokerAction) => {
     const tb = table.current
     if (!tb?.isHumanTurn) return
-    try { tb.act(a); actionSound(a.type); handOverSound(tb); setError(null) } catch (e) { setError((e as Error).message) }
+    try { tb.act(a); actionSound(a.type); handOverSound(tb); setError(null) } catch (e) { setError(errorText(e, tr)) }
     bump()
   }, [])
 
   const nextHand = () => {
     if (!t) return
-    try { t.startHand(); boardLen.current = 0; setError(null) } catch (e) { setError((e as Error).message) }
+    try { t.startHand(); boardLen.current = 0; setError(null) } catch (e) { setError(errorText(e, tr)) }
     bump()
   }
 
@@ -108,7 +111,7 @@ export default function HoldemGame() {
 
   const rebuy = (amount: Chips) => {
     if (!t) return
-    try { t.rebuy(amount); setRebuyOpen(false); setError(null) } catch (e) { setError((e as Error).message) }
+    try { t.rebuy(amount); setRebuyOpen(false); setError(null) } catch (e) { setError(errorText(e, tr)) }
     bump()
   }
 
@@ -133,7 +136,7 @@ export default function HoldemGame() {
     return (
       <div className="space-y-4">
         <BuyIn balance={balance} bigBlind={BIG_BLIND} onSit={sit} error={error} lastSession={session} />
-        <ResultToast result={toast} message="Cashed out" onDismiss={() => setToast(null)} />
+        <ResultToast result={toast} message={tr('he.cashedOut')} onDismiss={() => setToast(null)} />
       </div>
     )
   }
@@ -157,17 +160,17 @@ export default function HoldemGame() {
   const topWin = last?.pots[0]
   const sched = t.blindSchedule
   const blindInfo = sched
-    ? ` · level ${Math.floor((t.handNo - 1) / sched.everyHands) + 1} (up in ${sched.everyHands - ((t.handNo - 1) % sched.everyHands)})`
+    ? tr('he.level', { l: Math.floor((t.handNo - 1) / sched.everyHands) + 1, n: sched.everyHands - ((t.handNo - 1) % sched.everyHands) })
     : ''
 
   return (
     <div className="space-y-4">
       <Table
         title="holdem.tsx"
-        subtitle={`NL ${t.smallBlind}/${t.bigBlind}${blindInfo} · hand #${t.handNo} · ${t.phase === 'handOver' ? 'hand over' : t.phase}`}
+        subtitle={tr('he.subtitle', { sb: t.smallBlind, bb: t.bigBlind, info: blindInfo, n: t.handNo, phase: tr(`he.ph.${t.phase}` as Key) })}
         actions={
           <span className="font-mono text-xs">
-            <span className="text-muted">session </span>
+            <span className="text-muted">{tr('he.session')}</span>
             <span className={net >= 0 ? 'text-win' : 'text-lose'}>{net >= 0 ? '+' : ''}{net}</span>
           </span>
         }
@@ -177,24 +180,24 @@ export default function HoldemGame() {
               <ActionBar legal={t.legalActions()} currentBet={t.currentBet} pot={t.pot} stack={human.stack} onAct={act} />
             ) : over ? (
               <div className="flex flex-wrap items-center gap-2">
-                <button type="button" className="btn-primary" disabled={human.stack === 0} onClick={nextHand}>Next hand</button>
-                <button type="button" className="btn-ghost" onClick={() => setRebuyOpen((o) => !o)} aria-expanded={rebuyOpen}>Rebuy</button>
-                <button type="button" className="btn-ghost ml-auto" onClick={cashOut}>Cash out {human.stack}</button>
+                <button type="button" className="btn-primary" disabled={human.stack === 0} onClick={nextHand}>{tr('he.nextHand')}</button>
+                <button type="button" className="btn-ghost" onClick={() => setRebuyOpen((o) => !o)} aria-expanded={rebuyOpen}>{tr('he.rebuy')}</button>
+                <button type="button" className="btn-ghost ml-auto" onClick={cashOut}>{tr('he.cashOut', { n: human.stack })}</button>
               </div>
             ) : (
               <p className="font-mono text-sm text-muted" aria-live="polite">
-                {thinking !== null ? <>waiting for <span className="text-cyan">@{t.seats[thinking].name}</span>…</> : human.folded ? 'you folded — watching the hand' : '…'}
+                {thinking !== null ? <>{tr('he.waiting')} <span className="text-cyan">@{t.seats[thinking].name}</span>…</> : human.folded ? tr('he.folded') : '…'}
               </p>
             )}
             {over && rebuyOpen && (
-              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Rebuy">
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tr('he.rebuy')}>
                 {[200, 500, 1000].map((a) => (
                   <button key={a} type="button" className="btn-ghost" disabled={a > balance} onClick={() => rebuy(a)}>+{a}</button>
                 ))}
-                <span className="font-mono text-xs text-muted">wallet {balance}</span>
+                <span className="font-mono text-xs text-muted">{tr('he.wallet', { n: balance })}</span>
               </div>
             )}
-            {over && human.stack === 0 && !rebuyOpen && <p className="text-sm text-warn">You're out of chips. Rebuy or cash out.</p>}
+            {over && human.stack === 0 && !rebuyOpen && <p className="text-sm text-warn">{tr('he.outOfChips')}</p>}
             {error && <p role="alert" className="text-sm text-lose">{error}</p>}
           </div>
         }
@@ -216,14 +219,14 @@ export default function HoldemGame() {
               handNo={t.handNo} />
               ))}
             </div>
-            <div className="rounded-[2rem] border-2 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_80%)] px-2 py-3">
+            <div className="rounded-[2rem] border-2 border-felt-edge bg-[radial-gradient(ellipse_at_center,var(--color-felt),var(--felt-deep)_80%)] px-2 py-3">
               {/* board + pot */}
-          <div className={`flex flex-col items-center gap-2 ${compact ? 'py-1' : 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'}`} aria-label="Board">
+          <div className={`flex flex-col items-center gap-2 ${compact ? 'py-1' : 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'}`} aria-label={tr('he.board')}>
             <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">
               {pots.length === 0 ? null : pots.length === 1 || over
-                ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">pot <span className="num">{t.pot}</span></span>
+                ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">{tr('he.potLc')} <span className="num">{t.pot}</span></span>
                 : pots.map((p, i) => (
-                  <span key={i} className="rounded-full border border-neon/50 bg-bg/80 px-2 py-0.5 text-neon">{i === 0 ? 'main' : `side ${i}`} <span className="num">{p.amount}</span></span>
+                  <span key={i} className="rounded-full border border-neon/50 bg-bg/80 px-2 py-0.5 text-neon">{i === 0 ? tr('he.main') : tr('he.side', { n: i })} <span className="num">{p.amount}</span></span>
                 ))}
             </div>
             <div className="flex min-h-[4.5rem] gap-1" key={t.handNo}>
@@ -234,10 +237,10 @@ export default function HoldemGame() {
             </div>
             {over && topWin && (
               <p className="rounded bg-bg/85 px-2 py-0.5 text-center font-mono text-xs sm:text-sm" role="status">
-                <span className="text-win">{topWin.winners.map((w) => t.seats[w].human ? 'You' : `@${t.seats[w].name}`).join(' & ')}</span>
-                {' '}win{topWin.winners.length === 1 && !t.seats[topWin.winners[0]].human ? 's' : ''} {topWin.amount}
-                {topWin.hand && <> with <span className="font-bold text-neon">{topWin.hand}</span></>}
-                {last && last.pots.length > 1 && <span className="text-muted"> (+{last.pots.length - 1} side pot{last.pots.length > 2 ? 's' : ''})</span>}
+                <span className="text-win">{topWin.winners.map((w) => t.seats[w].human ? tr('he.you') : `@${t.seats[w].name}`).join(' & ')}</span>
+                {tr(topWin.winners.length > 1 ? 'he.winN' : t.seats[topWin.winners[0]].human ? 'he.winYou' : 'he.win1', { n: topWin.amount })}
+                {topWin.hand && <>{tr('he.with')}<span className="font-bold text-neon">{tr(`hand.${topWin.hand}` as Key)}</span></>}
+                {last && last.pots.length > 1 && <span className="text-muted">{tr(last.pots.length > 2 ? 'he.sidePotsN' : 'he.sidePots', { n: last.pots.length - 1 })}</span>}
               </p>
             )}
           </div>
@@ -257,14 +260,14 @@ export default function HoldemGame() {
         ) : (
         <div className={`relative mx-auto aspect-[4/5] w-full max-w-4xl ${n >= 8 ? "sm:aspect-[4/3] lg:aspect-[16/10] lg:my-4" : "sm:aspect-[16/9]"}`}>
             {/* felt */}
-            <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
+            <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-felt-edge bg-[radial-gradient(ellipse_at_center,var(--color-felt),var(--felt-deep)_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
             {/* board + pot */}
-            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2" aria-label="Board">
+            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2" aria-label={tr('he.board')}>
               <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">
                 {pots.length === 0 ? null : pots.length === 1 || over
-                  ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">pot <span className="num">{t.pot}</span></span>
+                  ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">{tr('he.potLc')} <span className="num">{t.pot}</span></span>
                   : pots.map((p, i) => (
-                    <span key={i} className="rounded-full border border-neon/50 bg-bg/80 px-2 py-0.5 text-neon">{i === 0 ? 'main' : `side ${i}`} <span className="num">{p.amount}</span></span>
+                    <span key={i} className="rounded-full border border-neon/50 bg-bg/80 px-2 py-0.5 text-neon">{i === 0 ? tr('he.main') : tr('he.side', { n: i })} <span className="num">{p.amount}</span></span>
                   ))}
               </div>
               <div className="flex min-h-[4.5rem] gap-1" key={t.handNo}>
@@ -275,10 +278,10 @@ export default function HoldemGame() {
               </div>
               {over && topWin && (
                 <p className="rounded bg-bg/85 px-2 py-0.5 text-center font-mono text-xs sm:text-sm" role="status">
-                  <span className="text-win">{topWin.winners.map((w) => t.seats[w].human ? 'You' : `@${t.seats[w].name}`).join(' & ')}</span>
-                  {' '}win{topWin.winners.length === 1 && !t.seats[topWin.winners[0]].human ? 's' : ''} {topWin.amount}
-                  {topWin.hand && <> with <span className="font-bold text-neon">{topWin.hand}</span></>}
-                  {last && last.pots.length > 1 && <span className="text-muted"> (+{last.pots.length - 1} side pot{last.pots.length > 2 ? 's' : ''})</span>}
+                  <span className="text-win">{topWin.winners.map((w) => t.seats[w].human ? tr('he.you') : `@${t.seats[w].name}`).join(' & ')}</span>
+                  {tr(topWin.winners.length > 1 ? 'he.winN' : t.seats[topWin.winners[0]].human ? 'he.winYou' : 'he.win1', { n: topWin.amount })}
+                  {topWin.hand && <>{tr('he.with')}<span className="font-bold text-neon">{tr(`hand.${topWin.hand}` as Key)}</span></>}
+                  {last && last.pots.length > 1 && <span className="text-muted">{tr(last.pots.length > 2 ? 'he.sidePotsN' : 'he.sidePots', { n: last.pots.length - 1 })}</span>}
                 </p>
               )}
             </div>

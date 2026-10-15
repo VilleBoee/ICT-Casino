@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import type { Chips } from '../engine/types'
+import { useT } from '../i18n'
 
 export const DENOMINATIONS = [1, 5, 25, 100, 500, 1000] as const satisfies readonly Chips[]
 export type Denomination = (typeof DENOMINATIONS)[number]
@@ -19,22 +20,24 @@ export interface ChipProps {
 
 export function Chip({ value, size = 48, selected = false, disabled = false, onClick }: ChipProps) {
   const reduce = useReducedMotion()
+  const t = useT()
   const color = CHIP_COLOR[value]
+  // chips keep a dark centre in both themes (physical object, and the coloured value text needs it for contrast)
   const style = {
     width: size, height: size, fontSize: size * 0.28, color,
     background: `repeating-conic-gradient(${color} 0 15deg, #0d1214 15deg 30deg)`,
   }
   const inner = (
-    <span className="grid h-[72%] w-[72%] place-items-center rounded-full border-2 bg-surface font-mono font-extrabold" style={{ borderColor: color }}>
+    <span className="grid h-[72%] w-[72%] place-items-center rounded-full border-2 bg-[#0d1214] font-mono font-extrabold" style={{ borderColor: color }}>
       {fmtChips(value)}
     </span>
   )
   const cls = `grid shrink-0 place-items-center rounded-full ${selected ? 'ring-2 ring-neon ring-offset-2 ring-offset-bg' : ''}`
-  if (!onClick) return <span className={cls} style={style} aria-label={`${value} chip`}>{inner}</span>
+  if (!onClick) return <span className={cls} style={style} aria-label={t('chip.aria', { n: value })}>{inner}</span>
   return (
     <motion.button
       type="button"
-      aria-label={`${value} chip`}
+      aria-label={t('chip.aria', { n: value })}
       aria-pressed={selected}
       data-sfx="chip"
       disabled={disabled}

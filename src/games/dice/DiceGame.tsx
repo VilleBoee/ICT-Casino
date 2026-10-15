@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useT } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { animate, motion, useReducedMotion } from 'framer-motion'
 import { BetPanel, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
@@ -14,6 +16,7 @@ const fmt = (n: number) => n.toFixed(2)
 export default function DiceGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const t = useT()
   const [bet, setBet] = useState<Chips>(10)
   const [lastBet, setLastBet] = useState<Chips>()
   const [direction, setDirection] = useState<DiceDirection>('under')
@@ -48,7 +51,7 @@ export default function DiceGame() {
   const roll = useCallback(() => {
     if (pending.current) return
     let r: RoundResult<DiceOutcome>
-    try { r = rollDice(wallet, { amount: bet, target, direction }) } catch (e) { setError((e as Error).message); return }
+    try { r = rollDice(wallet, { amount: bet, target, direction }) } catch (e) { setError(errorText(e, t)); return }
     setError(null); setToast(null); setLastBet(bet); setLast(null)
     pending.current = r
     play('spin', { rate: 2.4 })
@@ -83,13 +86,13 @@ export default function DiceGame() {
     <div className="space-y-4">
       <Table
         title="dice.tsx"
-        subtitle="roll 0.00–99.99 · 1% house edge"
+        subtitle={t('dc.subtitle')}
         footer={
           <div className="grid gap-4 md:grid-cols-[1fr_auto]">
             <BetPanel balance={balance} bet={bet} onBetChange={setBet} lastBet={lastBet} disabled={rolling} />
             <div className="flex flex-col justify-end gap-3 md:w-56">
               <button type="button" className="btn-primary h-16 text-lg" disabled={rolling || bet <= 0 || bet > balance} onClick={roll}>
-                {rolling ? 'Rolling…' : 'ROLL'} <kbd className="text-[10px] opacity-60">␣</kbd>
+                {rolling ? t('dc.rolling') : t('dc.roll')} <kbd className="text-[10px] opacity-60">␣</kbd>
               </button>
               {error && <p role="alert" className="text-sm text-warn">{error}</p>}
             </div>
@@ -123,46 +126,46 @@ export default function DiceGame() {
             )}
             <input type="range" min={0} max={100} step={0.01} value={target} disabled={rolling}
               onChange={(e) => setTarget(clampTarget(Number(e.target.value), direction))}
-              aria-label={`Target: roll ${direction}`} aria-valuetext={`${direction} ${fmt(target)}, ${p.chance}% chance`}
-              className="absolute inset-x-0 bottom-[-6px] h-6 w-full pointer-coarse:bottom-[-16px] pointer-coarse:h-11 cursor-pointer appearance-none bg-transparent accent-[#39ff88] disabled:cursor-not-allowed" />
+              aria-label={t('dc.target', { d: t(`dc.${direction}`) })} aria-valuetext={t('dc.targetVal', { d: t(`dc.${direction}`), v: fmt(target), c: p.chance })}
+              className="absolute inset-x-0 bottom-[-6px] h-6 w-full pointer-coarse:bottom-[-16px] pointer-coarse:h-11 cursor-pointer appearance-none bg-transparent accent-neon disabled:cursor-not-allowed" />
             <div className="mt-3 flex justify-between font-mono text-[10px] text-muted"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
           </div>
 
           {/* controls + live preview */}
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="panel space-y-2 p-3">
-              <p className="font-mono text-xs uppercase text-muted">direction</p>
-              <div className="flex gap-1" role="group" aria-label="Direction">
+              <p className="font-mono text-xs uppercase text-muted">{t('dc.direction')}</p>
+              <div className="flex gap-1" role="group" aria-label={t('dc.directionAria')}>
                 {(['under', 'over'] as const).map((d) => (
                   <button key={d} type="button" aria-pressed={direction === d} disabled={rolling}
-                    className={`${direction === d ? 'btn-secondary' : 'btn-ghost'} flex-1 px-2`} onClick={() => flip(d)}>{d}</button>
+                    className={`${direction === d ? 'btn-secondary' : 'btn-ghost'} flex-1 px-2`} onClick={() => flip(d)}>{t(`dc.${d}`)}</button>
                 ))}
               </div>
             </div>
             <label className="panel space-y-2 p-3">
-              <span className="block font-mono text-xs uppercase text-muted">target ({fmt(min)}–{fmt(max)})</span>
+              <span className="block font-mono text-xs uppercase text-muted">{t('dc.targetRange', { a: fmt(min), b: fmt(max) })}</span>
               <input type="number" step={0.01} min={min} max={max} value={target} disabled={rolling}
                 onChange={(e) => setTarget(clampTarget(Number(e.target.value), direction))}
                 className="num w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-lg text-fg" />
             </label>
             <div className="panel space-y-1 p-3">
-              <p className="font-mono text-xs uppercase text-muted">win chance</p>
+              <p className="font-mono text-xs uppercase text-muted">{t('dc.chance')}</p>
               <p className="num text-2xl text-cyan">{p.chance.toFixed(2)}%</p>
             </div>
             <div className="panel space-y-1 p-3">
-              <p className="font-mono text-xs uppercase text-muted">multiplier · payout</p>
+              <p className="font-mono text-xs uppercase text-muted">{t('dc.multPay')}</p>
               <p className="num text-2xl text-neon">{p.multiplier.toFixed(4)}x</p>
-              <p className="num text-xs text-muted">pays {p.payout} (+{p.profit})</p>
+              <p className="num text-xs text-muted">{t('dc.pays', { p: p.payout, q: p.profit })}</p>
             </div>
           </div>
 
           {/* history */}
-          <section aria-label="Recent rolls" className="space-y-1">
-            <h3 className="text-xs text-muted">recent rolls</h3>
+          <section aria-label={t('dc.recentAria')} className="space-y-1">
+            <h3 className="text-xs text-muted">{t('dc.recent')}</h3>
             <ol className="flex flex-wrap gap-1">
-              {history.length === 0 && <li className="font-mono text-xs text-muted">none yet</li>}
+              {history.length === 0 && <li className="font-mono text-xs text-muted">{t('dc.none')}</li>}
               {history.map((h) => (
-                <li key={h.roundId} title={`${h.outcome.direction} ${fmt(h.outcome.target)} · ${h.outcome.chance}%`}
+                <li key={h.roundId} title={`${t(`dc.${h.outcome.direction}`)} ${fmt(h.outcome.target)} · ${h.outcome.chance}%`}
                   className={`rounded border px-1.5 py-0.5 font-mono text-[11px] ${h.outcome.won ? 'border-win/60 text-win' : 'border-lose/60 text-lose'}`}>
                   {fmt(h.outcome.roll)} <span className="opacity-60">{h.outcome.direction === 'under' ? '<' : '>'}{fmt(h.outcome.target)}</span>
                 </li>
@@ -171,7 +174,7 @@ export default function DiceGame() {
           </section>
         </div>
       </Table>
-      <ResultToast result={toast} message={toast ? `rolled ${fmt(toast.outcome.roll)}` : undefined} onDismiss={() => setToast(null)} />
+      <ResultToast result={toast} message={toast ? t('dc.rolled', { n: fmt(toast.outcome.roll) }) : undefined} onDismiss={() => setToast(null)} />
     </div>
   )
 }

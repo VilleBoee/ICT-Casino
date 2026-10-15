@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useT, type Key } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { useReducedMotion } from 'framer-motion'
 import { BetPanel, Card, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
@@ -9,11 +11,11 @@ import { totalLabel } from './format'
 
 const FLIP_MS = 500
 const DEAL_MS = 380
-const ACTIONS: { a: Action; label: string; key: string }[] = [
-  { a: 'hit', label: 'Hit', key: 'h' },
-  { a: 'stand', label: 'Stand', key: 's' },
-  { a: 'double', label: 'Double', key: 'd' },
-  { a: 'split', label: 'Split', key: 'p' },
+const ACTIONS: { a: Action; label: Key; key: string }[] = [
+  { a: 'hit', label: 'bj.hit', key: 'h' },
+  { a: 'stand', label: 'bj.stand', key: 's' },
+  { a: 'double', label: 'bj.double', key: 'd' },
+  { a: 'split', label: 'bj.split', key: 'p' },
 ]
 const RESULT_STYLE: Record<HandResult, string> = {
   win: 'text-win border-win', blackjack: 'text-neon border-neon', push: 'text-cyan border-cyan', lose: 'text-lose border-lose',
@@ -27,6 +29,7 @@ type Phase = 'betting' | 'player' | 'reveal' | 'settled'
 export default function BlackjackGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const t = useT()
   const shoe = useMemo(() => new Shoe(6), []) // one shoe per table, reused between rounds
   const round = useRef<BlackjackRound | null>(null)
   const pending = useRef<RoundResult<BlackjackOutcome> | null>(null)
@@ -76,7 +79,7 @@ export default function BlackjackGame() {
     if (phase === 'player' || phase === 'reveal') return
     if (shoe.needsShuffle) shoe.reshuffle()
     let r: BlackjackRound
-    try { r = new BlackjackRound(wallet, bet, shoe) } catch (e) { setError((e as Error).message); return }
+    try { r = new BlackjackRound(wallet, bet, shoe) } catch (e) { setError(errorText(e, t)); return }
     setError(null); setToast(null); setLastBet(bet); setDealId((d) => d + 1)
     round.current = r
     setDealerShown(1)
@@ -126,15 +129,15 @@ export default function BlackjackGame() {
     <div className="space-y-4">
       <Table
         title="blackjack.tsx"
-        subtitle="6 decks · dealer stands soft 17 · blackjack pays 3:2"
-        actions={<span className="font-mono text-xs text-muted">keys: H S D P</span>}
+        subtitle={t('bj.subtitle')}
+        actions={<span className="font-mono text-xs text-muted">{t('bj.keys')}</span>}
         footer={
           phase === 'player' ? (
-            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Actions">
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('bj.actions')}>
               {ACTIONS.map(({ a, label, key }) => (
                 <button key={a} type="button" className={a === 'hit' ? 'btn-primary' : a === 'stand' ? 'btn-secondary' : 'btn-ghost'}
                   disabled={!legal.includes(a)} onClick={() => act(a)} aria-keyshortcuts={key.toUpperCase()}>
-                  {label} <kbd className="rounded border border-current/40 px-1 text-[10px] opacity-70">{key.toUpperCase()}</kbd>
+                  {t(label)} <kbd className="rounded border border-current/40 px-1 text-[10px] opacity-70">{key.toUpperCase()}</kbd>
                 </button>
               ))}
               {state && state.hands.length > 1 && (
@@ -143,26 +146,26 @@ export default function BlackjackGame() {
             </div>
           ) : (
             <BetPanel balance={balance} bet={bet} onBetChange={setBet} lastBet={lastBet} min={1}
-              disabled={phase === 'reveal'} onPlace={deal} placeLabel={phase === 'settled' ? 'Deal again' : 'Deal'} />
+              disabled={phase === 'reveal'} onPlace={deal} placeLabel={phase === 'settled' ? t('bj.dealAgain') : t('bj.deal')} />
           )
         }
       >
         <div className="flex min-h-80 flex-col justify-between gap-8" key={dealId}>
-          <section aria-label="Dealer" className="space-y-2">
+          <section aria-label={t('bj.dealer')} className="space-y-2">
             <p className="font-mono text-xs uppercase tracking-wider text-muted">
-              dealer {state && <span className="num ml-2 text-fg">{holeHidden ? totalLabel(state.dealer.slice(0, 1)) : totalLabel(dealerCards)}</span>}
+              {t('bj.dealerLc')} {state && <span className="num ml-2 text-fg">{holeHidden ? totalLabel(state.dealer.slice(0, 1)) : totalLabel(dealerCards)}</span>}
             </p>
             <div className="flex min-h-24 gap-2">
               {dealerCards.map((c, i) => (
                 <Card key={i} card={c} faceDown={i === 1 && holeHidden} dealIndex={i < 2 ? i * 2 + 1 : 0} />
               ))}
-              {!state && <p className="self-center font-mono text-sm text-muted">// place your bet and deal</p>}
+              {!state && <p className="self-center font-mono text-sm text-muted">{t('bj.placeAndDeal')}</p>}
             </div>
           </section>
 
           {error && <p role="alert" className="font-mono text-sm text-warn">{error}</p>}
 
-          <section aria-label="Your hands" className="flex flex-wrap gap-6">
+          <section aria-label={t('bj.yourHands')} className="flex flex-wrap gap-6">
             {state?.hands.map((h, hi) => {
               const active = phase === 'player' && hi === state.active
               const res = showResults ? toast?.outcome.results[hi] ?? lastResults.current?.[hi] : undefined
@@ -170,11 +173,11 @@ export default function BlackjackGame() {
                 <div key={hi} aria-current={active || undefined}
                   className={`space-y-2 rounded-lg border p-3 transition-colors ${active ? 'border-neon shadow-glow-neon' : 'border-transparent'} ${phase === 'player' && !active ? 'opacity-60' : ''}`}>
                   <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-muted">
-                    {state.hands.length > 1 ? `hand ${hi + 1}` : 'you'}
+                    {state.hands.length > 1 ? t('bj.hand', { n: hi + 1 }) : t('bj.you')}
                     <span className="num text-sm text-fg">{totalLabel(h.cards)}</span>
                     <span className="num text-neon">· {h.bet}{h.doubled && ' (2×)'}</span>
-                    {h.status === 'bust' && <span className="text-lose">bust</span>}
-                    {h.status === 'blackjack' && <span className="text-neon">blackjack</span>}
+                    {h.status === 'bust' && <span className="text-lose">{t('bj.bust')}</span>}
+                    {h.status === 'blackjack' && <span className="text-neon">{t('bj.blackjack')}</span>}
                   </p>
                   <div className="flex gap-2">
                     {h.cards.map((c, i) => (
@@ -183,7 +186,7 @@ export default function BlackjackGame() {
                   </div>
                   {res && (
                     <p className={`inline-block rounded border px-2 py-0.5 font-mono text-xs font-bold uppercase ${RESULT_STYLE[res.result]}`}>
-                      {res.result} {res.payout - h.bet > 0 ? `+${res.payout - h.bet}` : res.payout - h.bet}
+                      {t(`bj.r.${res.result}`)} {res.payout - h.bet > 0 ? `+${res.payout - h.bet}` : res.payout - h.bet}
                     </p>
                   )}
                 </div>
@@ -194,7 +197,7 @@ export default function BlackjackGame() {
       </Table>
       <ResultToast
         result={toast}
-        message={toast && toast.outcome.results.length > 1 ? toast.outcome.results.map((r) => r.result).join(' · ') : toast?.outcome.results[0]?.result === 'blackjack' ? 'Blackjack!' : undefined}
+        message={toast && toast.outcome.results.length > 1 ? toast.outcome.results.map((r) => t(`bj.r.${r.result}`)).join(' · ') : toast?.outcome.results[0]?.result === 'blackjack' ? t('bj.blackjackBang') : undefined}
         onDismiss={() => setToast(null)}
       />
     </div>

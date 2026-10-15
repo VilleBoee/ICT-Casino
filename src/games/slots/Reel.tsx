@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import type { SlotSymbol } from '../../engine/slots'
 import { SYMBOL_UI } from './symbols'
+import { useT } from '../../i18n'
 
 export interface ReelProps {
   /** Symbols top → bottom; the last 3 are the visible stop. */
@@ -17,12 +18,13 @@ export interface ReelProps {
 
 /** One reel: a strip that slides down... visually up, ending with its last 3 cells in the window. */
 export function Reel({ strip, spinKey, durationS, animate, highlight, dim, onStop, onLand }: ReelProps) {
+  const t = useT()
   const k = strip.length
   const end = `-${((k - 3) / k) * 100}%`
   const finalRows = strip.slice(-3)
   return (
     <div className="relative h-full overflow-hidden rounded-md border border-border bg-bg/70"
-      aria-label={`Reel: ${finalRows.map((s) => SYMBOL_UI[s].label).join(', ')}`} role="img">
+      aria-label={t('sl.reel', { s: finalRows.map((s) => t(`sl.s.${s}`)).join(', ') })} role="img">
       <motion.div
         key={spinKey}
         className="absolute inset-x-0 top-0"
