@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { colors, type ColorToken } from './theme/tokens'
-import { BetPanel, Card, ChipStack, ResultToast, Table } from './components'
-import type { Card as EngineCard, Chips, RoundResult } from './engine/types'
+import { colors, type ColorToken } from '../theme/tokens'
+import { BetPanel, Card, ChipStack, ResultToast, Table } from '../components'
+import type { Card as EngineCard, Chips, RoundResult } from '../engine/types'
 
 const HAND: EngineCard[] = [
   { rank: 14, suit: 'S' }, { rank: 13, suit: 'H' }, { rank: 10, suit: 'D' }, { rank: 7, suit: 'C' },
@@ -64,10 +64,10 @@ function ComponentShowcase() {
 
 const swatches: ColorToken[] = ['bg', 'surface', 'surface-2', 'border', 'fg', 'muted', 'neon', 'cyan', 'win', 'lose', 'warn']
 
-/** Temporary theme + component preview (#7, #9) — replaced by the app shell (#9). */
-function App() {
+/** Developer showcase of theme + shared components, at #/dev. */
+export default function DevPage() {
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-6 py-12">
+    <div className="space-y-8">
       <header className="space-y-2">
         <p className="font-mono text-sm text-muted">
           <span className="text-neon">ville@ict</span>:<span className="text-cyan">~/casino</span>$ npm run theme
@@ -121,8 +121,8 @@ function App() {
       </div>
 
       <ComponentShowcase />
-    </main>
+    </div>
   )
 }
 
-export default App
+
