@@ -9,7 +9,8 @@ import { VIEW_H, VIEW_W, curvePoints, fmtX, parseAuto, scales, toXY, yTicks } fr
 const HISTORY = 16
 const pointColor = (m: number) => (m < 1.5 ? 'text-lose border-lose/60' : m < 3 ? 'text-warn border-warn/60' : m < 10 ? 'text-cyan border-cyan/60' : 'text-neon border-neon/60')
 
-type View = { t: number; m: number; status: CrashStatus; ended: boolean }
+/** Everything the render needs, copied out of the engine each frame (no ref reads during render). */
+type View = { t: number; m: number; status: CrashStatus; ended: boolean; cashedAt: number | null; bet: Chips }
 
 export default function CrashGame() {
   const { balance, wallet } = useWallet()
@@ -46,22 +47,6 @@ export default function CrashGame() {
     if (r && !settled.current) { r.finish(); wallet.settle(r.result()) }
   }, [wallet])
 
-  const frame = useCallback((now: number) => {
-    const r = round.current
-    if (!r) return
-    const t = now - start.current
-    const { multiplier, status } = r.tick(t)
-    if (status !== 'running') settle() // cashed (manual/auto) or crashed: settle right away
-    // keep the line running after a cash-out until the actual crash, so the player sees where it went
-    const ended = t >= r.crashTimeMs
-    setView({ t: Math.min(t, r.crashTimeMs), m: multiplier, status, ended })
-    if (ended) {
-      setHistory((h) => [r.result().outcome.crashPoint, ...h].slice(0, HISTORY))
-      return
-    }
-    raf.current = requestAnimationFrame(frame)
-  }, [settle])
-
   const launch = () => {
     if (live) return
     let r: CrashRound
@@ -71,7 +56,21 @@ export default function CrashGame() {
     settled.current = false
     start.current = performance.now()
     cancelAnimationFrame(raf.current)
-    raf.current = requestAnimationFrame(frame)
+    // rAF loop over a local function (closes over this round), so it never references itself through a hook
+    const loop = (now: number) => {
+      const t = now - start.current
+      const { multiplier, status } = r.tick(t)
+      if (status !== 'running') settle() // cashed (manual/auto) or crashed: settle right away
+      // keep the line running after a cash-out until the actual crash, so the player sees where it went
+      const ended = t >= r.crashTimeMs
+      setView({ t: Math.min(t, r.crashTimeMs), m: multiplier, status, ended, cashedAt: r.cashedAt, bet: r.bet })
+      if (ended) {
+        setHistory((h) => [r.result().outcome.crashPoint, ...h].slice(0, HISTORY))
+        return
+      }
+      raf.current = requestAnimationFrame(loop)
+    }
+    raf.current = requestAnimationFrame(loop)
   }
 
   const cashOut = useCallback(() => {
@@ -79,6 +78,7 @@ export default function CrashGame() {
     if (!r || r.status !== 'running') return
     r.cashOut(performance.now() - start.current)
     settle()
+    setView((v) => (v ? { ...v, status: r.status, cashedAt: r.cashedAt } : v))
   }, [settle])
 
   // Space: cash out while running, otherwise launch
@@ -93,12 +93,12 @@ export default function CrashGame() {
     return () => window.removeEventListener('keydown', onKey)
   }, [cashOut, live])
 
-  const r = round.current
   const status = view?.status
   const crashedOut = !!view?.ended
   const canCash = live && status === 'running'
   const m = view?.m ?? 1
-  const cashedAt = r?.cashedAt ?? null
+  const cashedAt = view?.cashedAt ?? null
+  const roundBet = view?.bet ?? bet
   const s = view ? scales(view.t, m) : scales(0, 1)
   const tip = view ? toXY(view.t, m, s) : toXY(0, 1, s)
   const readoutColor = crashedOut ? (cashedAt ? 'text-win' : 'text-lose') : status === 'cashed' ? 'text-win' : 'text-neon'
@@ -130,7 +130,7 @@ export default function CrashGame() {
               </label>
               {canCash ? (
                 <button type="button" onClick={cashOut} className="btn-primary h-16 w-full text-lg">
-                  CASH OUT <span className="num">{Math.floor(bet * m)}</span> <kbd className="text-[10px] opacity-60">␣</kbd>
+                  CASH OUT <span className="num">{Math.floor(roundBet * m)}</span> <kbd className="text-[10px] opacity-60">␣</kbd>
                 </button>
               ) : (
                 <button id="crash-launch" type="button" onClick={launch} disabled={live || bet <= 0 || bet > balance}
@@ -187,7 +187,7 @@ export default function CrashGame() {
               >
                 {view ? fmtX(m) : '1.00x'}
               </motion.p>
-              {cashedAt !== null && <p className="mt-1 text-sm text-win">cashed out @ {fmtX(cashedAt)}{result?.outcome.auto ? ' (auto)' : ''} · +{Math.floor(bet * cashedAt) - bet}</p>}
+              {cashedAt !== null && <p className="mt-1 text-sm text-win">cashed out @ {fmtX(cashedAt)}{result?.outcome.auto ? ' (auto)' : ''} · +{Math.floor(roundBet * cashedAt) - roundBet}</p>}
               {!view && <p className="mt-1 text-sm text-muted">$ ./launch --bet {bet}{auto ? ` --auto ${fmtX(auto)}` : ''}</p>}
               {crashedOut && result && <p className="mt-1 text-[10px] text-muted">seed {result.outcome.seed}</p>}
             </div>
