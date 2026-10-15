@@ -6,7 +6,7 @@ import { useSound } from './sound'
 
 export function TopBar() {
   const { balance, canRefill, wallet } = useWallet()
-  const { muted, toggleMute } = useSound()
+  const { muted, volume, toggleMute, setVolume } = useSound()
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-3">
@@ -36,6 +36,15 @@ export function TopBar() {
           >
             {muted ? '🔇' : '🔊'}
           </button>
+          <input
+            type="range" min={0} max={100} step={5}
+            value={Math.round(volume * 100)}
+            onChange={(e) => { setVolume(Number(e.target.value) / 100); if (muted && Number(e.target.value) > 0) toggleMute() }}
+            aria-label="Volume"
+            aria-valuetext={`${Math.round(volume * 100)}%`}
+            title={`Volume ${Math.round(volume * 100)}%`}
+            className="hidden w-20 accent-neon md:block"
+          />
           <div className="whitespace-nowrap rounded-md border border-neon/40 bg-surface px-2 py-1 shadow-glow-neon sm:px-3 sm:py-1.5" aria-live="polite">
             <span className="font-mono text-xs text-muted">$ </span>
             <CountUp value={balance} className="num text-lg font-semibold text-neon" />
