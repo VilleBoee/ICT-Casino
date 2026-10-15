@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { play } from '../app/sound'
 import type { Card as EngineCard, Rank, Suit } from '../engine/types'
+import { useT, type Key, type T } from '../i18n'
 
 const RANK_LABEL: Record<Rank, string> = {
   2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
@@ -12,6 +13,9 @@ const RANK_NAME: Partial<Record<Rank, string>> = { 11: 'jack', 12: 'queen', 13: 
 
 export const rankLabel = (r: Rank) => RANK_LABEL[r]
 export const suitGlyph = (s: Suit) => SUIT_GLYPH[s]
+/** Localised aria label, e.g. "queen of hearts" / "hertta kuningatar". */
+export const cardLabelT = (t: T, c: EngineCard) =>
+  t('card.of', { r: c.rank >= 11 ? t(`card.r.${c.rank}` as Key) : c.rank, s: t(`card.s.${c.suit}`) })
 export const cardLabel = (c: EngineCard) => `${RANK_NAME[c.rank] ?? c.rank} of ${SUIT_NAME[c.suit]}`
 
 export interface CardProps {
@@ -31,6 +35,7 @@ const SIZES = { sm: 'w-12 h-[4.5rem] text-sm', md: 'w-16 h-24 text-base', lg: 'w
 /** Playing card rendered from the engine `Card` type, with deal + flip animations. */
 export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highlight = false }: CardProps) {
   const reduce = useReducedMotion()
+  const t = useT()
   // deal swish timed with the deal animation; flip snap whenever faceDown changes
   useEffect(() => {
     if (reduce) return
@@ -49,7 +54,7 @@ export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highl
   return (
     <motion.div
       role="img"
-      aria-label={faceDown ? 'face-down card' : cardLabel(card)}
+      aria-label={faceDown ? t('card.down') : cardLabelT(t, card)}
       className={`relative shrink-0 overflow-hidden rounded-md [perspective:600px] ${SIZES[size]}`}
       initial={reduce ? false : { opacity: 0, y: -40, x: 30, rotate: -8 }}
       animate={{ opacity: 1, y: 0, x: 0, rotate: 0 }}

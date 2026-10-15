@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { play } from '../app/sound'
 import type { Chips, RoundResult } from '../engine/types'
+import { useT, type Key } from '../i18n'
 
 export type ResultKind = 'win' | 'lose' | 'push'
 
@@ -21,15 +22,16 @@ export interface ResultToastProps {
   sound?: boolean
 }
 
-const STYLE: Record<ResultKind, { label: string; cls: string }> = {
-  win: { label: 'WIN', cls: 'border-win text-win shadow-[0_0_24px_rgb(74_222_128/.35)]' },
-  lose: { label: 'LOSE', cls: 'border-lose text-lose' },
-  push: { label: 'PUSH', cls: 'border-cyan text-cyan' },
+const STYLE: Record<ResultKind, { label: Key; cls: string }> = {
+  win: { label: 'toast.win', cls: 'border-win text-win shadow-[0_0_24px_rgb(74_222_128/.35)]' },
+  lose: { label: 'toast.lose', cls: 'border-lose text-lose' },
+  push: { label: 'toast.push', cls: 'border-cyan text-cyan' },
 }
 const signed = (n: Chips) => (n > 0 ? `+${n}` : String(n))
 
 export function ResultToast({ result, message, onDismiss, autoHideMs = 3000, sound = true }: ResultToastProps) {
   const reduce = useReducedMotion()
+  const t = useT()
   const roundId = result?.roundId
   useEffect(() => {
     if (!result || !sound) return
@@ -58,11 +60,11 @@ export function ResultToast({ result, message, onDismiss, autoHideMs = 3000, sou
               exit={reduce ? { opacity: 0 } : { opacity: 0, y: -16 }}
               transition={reduce ? { duration: 0.01 } : { type: 'spring', stiffness: 320, damping: 26 }}
             >
-              <span className="font-mono text-lg font-extrabold">{s.label}</span>
+              <span className="font-mono text-lg font-extrabold">{t(s.label)}</span>
               <span className="num text-xl">{signed(result.payout - result.stake)}</span>
               {message && <span className="text-sm text-fg">{message}</span>}
               {onDismiss && (
-                <button type="button" className="ml-2 cursor-pointer text-muted hover:text-fg" aria-label="Dismiss" onClick={onDismiss}>✕</button>
+                <button type="button" className="ml-2 cursor-pointer text-muted hover:text-fg" aria-label={t('common.dismiss')} onClick={onDismiss}>✕</button>
               )}
             </motion.div>
           )

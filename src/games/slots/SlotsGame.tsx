@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useT } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CountUp, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
@@ -19,6 +21,7 @@ const LINE_COLORS = ['#39ff88', '#22d3ee', '#fbbf24', '#c084fc', '#f87171', '#4a
 export default function SlotsGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const t = useT()
   const [lineBet, setLineBet] = useState<Chips>(1)
   const [round, setRound] = useState<RoundResult<SlotsOutcome> | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -47,21 +50,21 @@ export default function SlotsGame() {
   const spin = useCallback(() => {
     if (pending.current) return
     let r: RoundResult<SlotsOutcome>
-    try { r = spinSlots(wallet, lineBet) } catch (e) { setError((e as Error).message); setAutoLeft(0); return }
+    try { r = spinSlots(wallet, lineBet) } catch (e) { setError(errorText(e, t)); setAutoLeft(0); return }
     setError(null); setToast(null); setLastWin(0); setFocusLine(null)
     pending.current = r
     setRound(r)
     setSpinning(true)
     if (reduce) queueMicrotask(stop)
-  }, [wallet, lineBet, reduce, stop])
+  }, [wallet, lineBet, reduce, stop, t])
 
   // Auto-spin: next spin after a short pause; stops when the balance can't cover the stake.
   useEffect(() => {
     if (spinning || autoLeft <= 0) return
-    if (balance < stake) { setAutoLeft(0); setError('Auto-spin stopped: balance too low'); return }
+    if (balance < stake) { setAutoLeft(0); setError(t('sl.autoStopped')); return }
     const id = setTimeout(() => { setAutoLeft((n) => n - 1); spin() }, round ? (reduce ? 300 : 900) : 0)
     return () => clearTimeout(id)
-  }, [spinning, autoLeft, balance, stake, spin, round, reduce])
+  }, [spinning, autoLeft, balance, stake, spin, round, reduce, t])
 
   // Space / Enter on the page spins
   useEffect(() => {
@@ -86,30 +89,30 @@ export default function SlotsGame() {
     <div className="space-y-4">
       <Table
         title="slots.tsx"
-        subtitle={`5 reels · 10 lines · RTP ${(slotsRtp() * 100).toFixed(1)}%`}
-        actions={<button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => dialog.current?.showModal()}>Paytable</button>}
+        subtitle={t('sl.subtitle', { rtp: (slotsRtp() * 100).toFixed(1) })}
+        actions={<button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => dialog.current?.showModal()}>{t('sl.paytable')}</button>}
         footer={
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs uppercase tracking-wider text-muted">line bet</span>
-              <div className="flex flex-wrap gap-1" role="group" aria-label="Line bet">
+              <span className="font-mono text-xs uppercase tracking-wider text-muted">{t('sl.lineBetLc')}</span>
+              <div className="flex flex-wrap gap-1" role="group" aria-label={t('sl.lineBet')}>
                 {LINE_BETS.map((b) => (
                   <button key={b} type="button" aria-pressed={lineBet === b}
                     disabled={spinning || autoLeft > 0 || b * PAYLINES.length > balance}
                     className={`${lineBet === b ? 'btn-secondary' : 'btn-ghost'} px-3`} onClick={() => setLineBet(b)}>{b}</button>
                 ))}
               </div>
-              <span className="font-mono text-sm text-muted">× 10 lines = <span className="num text-neon">{stake}</span></span>
+              <span className="font-mono text-sm text-muted">{t('sl.xLines')} <span className="num text-neon">{stake}</span></span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" className="btn-primary min-w-32" disabled={spinning || autoLeft > 0 || balance < stake} onClick={spin}>
-                {spinning ? 'Spinning…' : 'Spin'} <kbd className="text-[10px] opacity-60">␣</kbd>
+                {spinning ? t('rl.spinning') : t('rl.spin')} <kbd className="text-[10px] opacity-60">␣</kbd>
               </button>
               {autoLeft > 0 ? (
-                <button type="button" className="btn-ghost" onClick={() => setAutoLeft(0)}>Stop auto ({autoLeft})</button>
+                <button type="button" className="btn-ghost" onClick={() => setAutoLeft(0)}>{t('sl.stopAuto', { n: autoLeft })}</button>
               ) : (
                 AUTO.map((n) => (
-                  <button key={n} type="button" className="btn-ghost px-3" disabled={spinning || balance < stake} onClick={() => setAutoLeft(n)}>Auto {n}</button>
+                  <button key={n} type="button" className="btn-ghost px-3" disabled={spinning || balance < stake} onClick={() => setAutoLeft(n)}>{t('sl.auto', { n })}</button>
                 ))
               )}
               {error && <span role="alert" className="ml-auto text-sm text-warn">{error}</span>}
@@ -147,13 +150,13 @@ export default function SlotsGame() {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3" aria-live="polite">
             <div>
-              <p className="font-mono text-xs uppercase tracking-wider text-muted">win</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-muted">{t('sl.win')}</p>
               <CountUp value={lastWin} duration={reduce ? 0 : 1.2}
                 className={`num text-4xl font-extrabold ${lastWin > 0 ? 'text-win text-glow' : 'text-muted'}`} />
-              <span className="sr-only">{spinning ? 'Spinning' : `Won ${lastWin}`}</span>
+              <span className="sr-only">{spinning ? t('sl.spinningSr') : t('sl.won', { n: lastWin })}</span>
             </div>
             {wins.length > 0 && (
-              <ul className="flex flex-wrap gap-1" aria-label="Winning lines">
+              <ul className="flex flex-wrap gap-1" aria-label={t('sl.winningLines')}>
                 {wins.map((w) => (
                   <li key={w.line}>
                     <button type="button" aria-pressed={focusLine === w.line}
@@ -173,26 +176,26 @@ export default function SlotsGame() {
         aria-labelledby="paytable-title" onClick={(e) => e.target === dialog.current && dialog.current?.close()}>
         <div className="space-y-4 p-5">
           <div className="flex items-center justify-between">
-            <h2 id="paytable-title">Paytable</h2>
-            <button type="button" className="btn-ghost px-2 py-1" onClick={() => dialog.current?.close()} aria-label="Close paytable">✕</button>
+            <h2 id="paytable-title">{t('sl.paytable')}</h2>
+            <button type="button" className="btn-ghost px-2 py-1" onClick={() => dialog.current?.close()} aria-label={t('sl.closePaytable')}>✕</button>
           </div>
-          <p className="text-sm text-muted">Pays × line bet for 3, 4 or 5 matching symbols from the leftmost reel on any of the 10 lines.</p>
+          <p className="text-sm text-muted">{t('sl.pays')}</p>
           <table className="w-full font-mono text-sm">
-            <thead><tr className="text-left text-muted"><th className="py-1">symbol</th><th className="text-right">×3</th><th className="text-right">×4</th><th className="text-right">×5</th></tr></thead>
+            <thead><tr className="text-left text-muted"><th className="py-1">{t('sl.symbol')}</th><th className="text-right">×3</th><th className="text-right">×4</th><th className="text-right">×5</th></tr></thead>
             <tbody>
               {[...SLOT_SYMBOLS].reverse().map((s) => (
                 <tr key={s} className="border-t border-border">
-                  <td className="py-1.5"><span style={{ color: SYMBOL_UI[s].color }} className="mr-2 text-lg">{SYMBOL_UI[s].glyph}</span>{SYMBOL_UI[s].label}</td>
+                  <td className="py-1.5"><span style={{ color: SYMBOL_UI[s].color }} className="mr-2 text-lg">{SYMBOL_UI[s].glyph}</span>{t(`sl.s.${s}`)}</td>
                   {SLOT_PAYTABLE[s].map((p, i) => <td key={i} className="num text-right">{p}</td>)}
                 </tr>
               ))}
             </tbody>
           </table>
           <div>
-            <p className="mb-2 font-mono text-xs text-muted">paylines</p>
+            <p className="mb-2 font-mono text-xs text-muted">{t('sl.paylines')}</p>
             <div className="grid grid-cols-5 gap-2">
               {PAYLINES.map((_, l) => (
-                <svg key={l} viewBox={`0 0 500 ${GRID_H}`} className="rounded border border-border bg-bg" aria-label={`Line ${l + 1}`}>
+                <svg key={l} viewBox={`0 0 500 ${GRID_H}`} className="rounded border border-border bg-bg" aria-label={t('sl.line', { n: l + 1 })}>
                   <polyline points={linePoints(l)} fill="none" stroke={LINE_COLORS[l]} strokeWidth={24} strokeLinecap="round" />
                 </svg>
               ))}
@@ -200,7 +203,7 @@ export default function SlotsGame() {
           </div>
         </div>
       </dialog>
-      <ResultToast result={toast} message={toast ? `${toast.outcome.wins.length} line${toast.outcome.wins.length === 1 ? '' : 's'}` : undefined} onDismiss={() => setToast(null)} />
+      <ResultToast result={toast} message={toast ? t(toast.outcome.wins.length === 1 ? 'sl.lines1' : 'sl.linesN', { n: toast.outcome.wins.length }) : undefined} onDismiss={() => setToast(null)} />
     </div>
   )
 }
