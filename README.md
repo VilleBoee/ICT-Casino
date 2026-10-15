@@ -10,10 +10,9 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-5-6E9F18?logo=vitest&logoColor=white)
 
-🔗 **Live demo:** `<!-- TODO: GitHub Pages link once Pages is enabled -->`
+🔗 **Live demo:** https://villeboee.github.io/ICT-Casino/
 
-![Screenshot placeholder](docs/screenshot-lobby.png)
-<!-- TODO: add lobby + game screenshots -->
+![ICT-Casino lobby](docs/screenshot.png)
 
 </div>
 
