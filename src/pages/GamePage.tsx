@@ -11,10 +11,11 @@ import CrashGame from '../games/crash/CrashGame'
 import DiceGame from '../games/dice/DiceGame'
 import HoldemGame from '../games/holdem/HoldemGame'
 import RouletteGame from '../games/roulette/RouletteGame'
+import PlinkoGame from '../games/plinko/PlinkoGame'
 import { useT } from '../i18n'
 
 /** Game UIs register here as they land (#12, #15, ...). */
-const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame, crash: CrashGame, dice: DiceGame, holdem: HoldemGame, videopoker: VideoPokerGame }
+const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame, crash: CrashGame, dice: DiceGame, holdem: HoldemGame, videopoker: VideoPokerGame, plinko: PlinkoGame }
 
 export default function GamePage({ id }: { id: string }) {
   const t = useT()
