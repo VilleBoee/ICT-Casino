@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { colorOf } from '../../engine/roulette'
-import { POCKET_DEG, WHEEL_ORDER } from './wheel'
+import { POCKET_DEG, WHEEL_ORDER } from './wheelMath'
 
 const FILL = { red: '#b91c3a', black: '#141b1e', green: '#0f8a4a' } as const
 const R = 140

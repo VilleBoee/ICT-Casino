@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { POCKET_DEG, WHEEL_ORDER, pocketIndex, targetRotation } from './wheel'
+import { POCKET_DEG, WHEEL_ORDER, pocketIndex, targetRotation } from './wheelMath'
 
 const atTop = (rot: number) => {
   const i = Math.round(((((-rot) % 360) + 360) % 360) / POCKET_DEG) % 37

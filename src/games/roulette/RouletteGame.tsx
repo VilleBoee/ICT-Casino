@@ -8,7 +8,7 @@ import { play, stop as stopSfx } from '../../app/sound'
 import { BettingBoard } from './BettingBoard'
 import { Wheel } from './Wheel'
 import { spotKey, toEngineBets, totalOf, type BetMap, type Spot } from './bets'
-import { targetRotation } from './wheel'
+import { targetRotation } from './wheelMath'
 
 const SPIN_S = 5.5
 const HISTORY = 14
