@@ -15,7 +15,7 @@ export const GAMES: GameInfo[] = [
   { id: 'holdem', name: "Texas Hold'em", tagline: 'You vs 5 bots', icon: '♦', ready: false },
   { id: 'slots', name: 'Slots', tagline: 'Spin the reels', icon: '▣', ready: true },
   { id: 'videopoker', name: 'Video Poker', tagline: 'Jacks or Better', icon: '♥', ready: false },
-  { id: 'baccarat', name: 'Baccarat', tagline: 'Player · Banker · Tie', icon: '♣', ready: false },
+  { id: 'baccarat', name: 'Baccarat', tagline: 'Player · Banker · Tie', icon: '♣', ready: true },
   { id: 'crash', name: 'Crash', tagline: 'Cash out before it crashes', icon: '↗', ready: false },
   { id: 'dice', name: 'Dice', tagline: 'Roll over / under', icon: '⚄', ready: false },
 ]
