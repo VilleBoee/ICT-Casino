@@ -441,4 +441,6 @@ export const fi: Record<Key, string> = {
   "pl.boardResult": "Plinko-lauta, pallo osui kertoimeen {m}",
   "pl.landed": "osui {m} · maksettu {n}",
   "pl.hint": "valitse rivit ja riski, sitten pudota",
+  "nav.games": "Pelit",
+  "top.menu": "Valikko",
 }

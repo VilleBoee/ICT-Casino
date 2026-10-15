@@ -439,6 +439,8 @@ export const en = {
   "pl.boardResult": "Plinko board, ball landed on {m}",
   "pl.landed": "landed on {m} · paid {n}",
   "pl.hint": "pick rows and risk, then drop",
+  "nav.games": "Games",
+  "top.menu": "Menu",
 } as const
 
 export type Key = keyof typeof en

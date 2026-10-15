@@ -133,3 +133,8 @@
 @utility btn-ghost { @apply btn border border-border bg-transparent text-fg hover:border-neon hover:text-neon; }
 @utility num { @apply font-mono tabular-nums; }
 @utility text-glow { text-shadow: 0 0 12px currentColor; }
+
+/* game nav strip: no scrollbar, soft fades at the edges while it scrolls (#91) */
+.nav-strip { scrollbar-width: none; mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%); }
+.nav-strip::-webkit-scrollbar { display: none; }
+@media (min-width: 64rem) { .nav-strip { mask-image: none; } }

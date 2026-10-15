@@ -34,7 +34,7 @@ export default function App() {
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-neon focus:px-3 focus:py-2 focus:text-bg">
         {t('app.skip')}
       </a>
-      <TopBar />
+      <TopBar path={path} />
       <main ref={main} id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-10 outline-none">
         {route(path)}
       </main>
