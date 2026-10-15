@@ -423,6 +423,22 @@ export const en = {
   "pj.lost": "empty cup · no win",
   "pj.hint": "drop a coin and watch it rattle down",
   "pj.cups": "Cups",
+  "game.plinko.name": "Plinko",
+  "game.plinko.tagline": "Drop the ball through the pegs",
+  "pl.subtitle": "{rows} rows · RTP {rtp}%",
+  "pl.recent": "Recent drops",
+  "pl.noDrops": "no drops yet",
+  "pl.rows": "rows",
+  "pl.risk": "risk",
+  "pl.risk.low": "low",
+  "pl.risk.medium": "medium",
+  "pl.risk.high": "high",
+  "pl.drop": "DROP {n}",
+  "pl.dropping": "dropping…",
+  "pl.board": "Plinko board, {rows} rows",
+  "pl.boardResult": "Plinko board, ball landed on {m}",
+  "pl.landed": "landed on {m} · paid {n}",
+  "pl.hint": "pick rows and risk, then drop",
 } as const
 
 export type Key = keyof typeof en

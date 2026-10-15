@@ -6,7 +6,7 @@ export const HISTORY_CAP = 1000
 /** A new session starts on app load or after this much idle time between rounds. */
 export const SESSION_IDLE_MS = 30 * 60 * 1000
 const WALLET_KEY = 'ict-casino:wallet'
-const GAMES: GameId[] = ['roulette', 'blackjack', 'holdem', 'slots', 'videopoker', 'baccarat', 'crash', 'dice', 'pajatso']
+const GAMES: GameId[] = ['roulette', 'blackjack', 'holdem', 'slots', 'videopoker', 'baccarat', 'crash', 'dice', 'pajatso', 'plinko']
 
 export interface HistoryEntry {
   game: GameId

@@ -20,6 +20,7 @@ export const GAMES: GameInfo[] = [
   { id: 'crash', name: 'Crash', tagline: 'Cash out before it crashes', icon: '↗', ready: true },
   { id: 'dice', name: 'Dice', tagline: 'Roll over / under', icon: '⚄', ready: true },
   { id: 'pajatso', name: 'Pajatso', tagline: 'Retro Finnish coin machine', icon: '◎', ready: true },
+  { id: 'plinko', name: 'Plinko', tagline: 'Drop the ball through the pegs', icon: '⋮', ready: true },
 ]
 /** Localised game name / tagline. */
 export const gameName = (t: T, id: GameId) => t(`game.${id}.name` as Key)
