@@ -5,10 +5,11 @@ import type { GameId } from '../engine/types'
 import NotFound from './NotFound'
 import BlackjackGame from '../games/blackjack/BlackjackGame'
 import SlotsGame from '../games/slots/SlotsGame'
+import CrashGame from '../games/crash/CrashGame'
 import RouletteGame from '../games/roulette/RouletteGame'
 
 /** Game UIs register here as they land (#12, #15, ...). */
-const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame }
+const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, crash: CrashGame }
 
 export default function GamePage({ id }: { id: string }) {
   const game = gameById(id)
