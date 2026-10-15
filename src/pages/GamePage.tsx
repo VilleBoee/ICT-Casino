@@ -3,9 +3,10 @@ import { gameById } from '../app/games'
 import { href } from '../app/router'
 import type { GameId } from '../engine/types'
 import NotFound from './NotFound'
+import RouletteGame from '../games/roulette/RouletteGame'
 
 /** Game UIs register here as they land (#12, #15, ...). */
-const SCREENS: Partial<Record<GameId, ComponentType>> = {}
+const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame }
 
 export default function GamePage({ id }: { id: string }) {
   const game = gameById(id)
