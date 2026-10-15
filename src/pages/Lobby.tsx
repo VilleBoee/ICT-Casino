@@ -13,7 +13,7 @@ export default function Lobby() {
           <span className="text-neon">ville@ict</span>:<span className="text-cyan">~/casino</span>$ ls games/
         </p>
         <h1>{t('lobby.title')}</h1>
-        <p className="text-muted">{t('lobby.intro')} <a href={href('/stats')}>{t('lobby.stats')}</a></p>
+        <p className="text-muted">{t('lobby.intro')} <a href={href('/stats')} className="inline-flex min-h-11 items-center">{t('lobby.stats')}</a></p>
       </header>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {GAMES.map((g, i) => (

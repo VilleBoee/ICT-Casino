@@ -46,7 +46,7 @@ export default function StatsPage() {
   const header = (
     <header className="mb-6 flex flex-wrap items-end gap-3">
       <div>
-        <p className="font-mono text-sm text-muted"><a href={href('/')}>~</a>/stats</p>
+        <p className="font-mono text-sm text-muted"><a href={href('/')} aria-label={t('lobby.title')} className="-my-3 -mx-[15px] inline-flex min-h-11 min-w-11 items-center justify-center">~</a>/stats</p>
         <h1>{t('stats.title')}</h1>
       </div>
       <div className="ml-auto flex flex-wrap gap-2">

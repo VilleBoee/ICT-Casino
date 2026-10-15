@@ -140,7 +140,7 @@ export default function VideoPokerGame() {
             <label className="flex items-center gap-1 font-mono text-xs text-muted">
               {t('vp.coin')}
               <select value={coinValue} disabled={phase === 'hold' || busy} onChange={(e) => setCoinValue(Number(e.target.value))}
-                className="rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg">
+                className="min-h-11 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg">
                 {COIN_VALUES.map((v) => <option key={v} value={v} disabled={v * coins > balance}>{v}</option>)}
               </select>
             </label>

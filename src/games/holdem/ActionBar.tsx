@@ -41,7 +41,7 @@ export function ActionBar({ legal, currentBet, pot, stack, onAct }: ActionBarPro
           <input type="range" min={r.min} max={r.max} step={1} value={val} onChange={(e) => setTo(Number(e.target.value))}
             className="min-w-40 flex-1 accent-neon pointer-coarse:h-11" aria-label={t('he.amount', { k: t(`he.k.${r.kind}`) })} aria-valuetext={t('he.chips', { n: val })} />
           <input type="number" min={r.min} max={r.max} value={val} onChange={(e) => setTo(Number(e.target.value))}
-            className="num w-24 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg" aria-label={t('he.exact')} />
+            className="num min-h-11 w-24 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-sm text-fg" aria-label={t('he.exact')} />
           <button type="button" className="btn-ghost px-2 text-xs" onClick={() => setTo(r.min)}>{t('he.min')}</button>
           <button type="button" className="btn-ghost px-2 text-xs" onClick={() => setTo(presetTo(r, currentBet, pot, 0.5))}>{t('he.halfPot')}</button>
           <button type="button" className="btn-ghost px-2 text-xs" onClick={() => setTo(presetTo(r, currentBet, pot, 1))}>{t('he.pot')}</button>

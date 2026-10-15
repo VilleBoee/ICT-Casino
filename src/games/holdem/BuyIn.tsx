@@ -47,8 +47,11 @@ export function BuyIn({ balance, bigBlind, onSit, error, lastSession }: BuyInPro
               ))}
             </div>
           </fieldset>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={rising} onChange={(e) => setRising(e.target.checked)} className="accent-neon" />
+          <label className="relative flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+            {/* invisible 44px hit area over a normal-size visual box */}
+            <input type="checkbox" checked={rising} onChange={(e) => setRising(e.target.checked)}
+              className="peer absolute -left-3 top-1/2 size-11 -translate-y-1/2 cursor-pointer opacity-0" />
+            <span aria-hidden className="grid size-4 shrink-0 place-items-center rounded-[3px] border border-border bg-surface-2 text-[11px] font-bold leading-none text-bg peer-checked:border-neon peer-checked:bg-neon peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-neon">{rising ? '✓' : ''}</span>
             {t('he.rising')} <span className="text-muted">{t('he.risingHelp')}</span>
           </label>
           <button type="button" className="btn-primary w-full" onClick={() => onSit(value, bots, rising)}>{t('he.sit', { n: value })}</button>
