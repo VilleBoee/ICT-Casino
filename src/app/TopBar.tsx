@@ -14,6 +14,7 @@ export function TopBar() {
           ICT<span className="text-neon text-glow">_</span>Casino
         </a>
         <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
+          <a href={href('/stats')} className="btn-ghost whitespace-nowrap px-2 no-underline pointer-coarse:py-2.5 sm:px-3" title="Stats & history">Stats</a>
           <button
             type="button"
             className="btn-ghost whitespace-nowrap px-2 sm:px-3"
