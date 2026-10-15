@@ -215,3 +215,13 @@ describe('house edge: dice (exact)', () => {
       expect(rtp).toBeGreaterThan(0.989)
     })
 })
+
+describe('sim runner', () => {
+  it('produces a row per game with edges near theory (small scale)', async () => {
+    const { runAllSims, formatSimTable } = await import('./sim')
+    const rows = runAllSims(7, 0.05)
+    expect(new Set(rows.map((r) => r.game)).size).toBe(8)
+    for (const r of rows.filter((x) => x.rounds && x.game !== 'Video Poker 9/6' && x.game !== 'Blackjack')) expect(Math.abs(r.measured - r.theoretical)).toBeLessThan(0.06)
+    expect(formatSimTable(rows)).toContain('| Roulette | red/black |')
+  }, 60_000)
+})
