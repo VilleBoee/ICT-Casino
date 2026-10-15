@@ -15,18 +15,18 @@ export interface TableProps {
 export function Table({ title, subtitle, actions, footer, children }: TableProps) {
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-panel" aria-label={title}>
-      <header className="flex items-center gap-3 border-b border-border bg-surface-2 px-4 py-2">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-surface-2 px-3 py-2 sm:flex-nowrap sm:px-4">
         <span className="flex gap-1.5" aria-hidden>
           <i className="h-3 w-3 rounded-full bg-lose/80" />
           <i className="h-3 w-3 rounded-full bg-warn/80" />
           <i className="h-3 w-3 rounded-full bg-win/80" />
         </span>
         <h2 className="text-sm">{title}</h2>
-        {subtitle && <span className="font-mono text-xs text-muted">{subtitle}</span>}
-        <div className="ml-auto">{actions}</div>
+        <div className="ml-auto min-w-0 sm:order-last">{actions}</div>
+        {subtitle && <span className="order-last basis-full font-mono text-xs text-muted sm:order-none sm:basis-auto">{subtitle}</span>}
       </header>
       <div
-        className="relative min-h-64 p-6"
+        className="relative min-h-64 p-3 sm:p-6"
         style={{
           background:
             'radial-gradient(ellipse at center, rgb(16 80 52 / .55), rgb(7 9 10 / .9) 75%), linear-gradient(rgb(57 255 136 / .05) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgb(57 255 136 / .05) 1px, transparent 1px) 0 0 / 24px 24px',
@@ -34,7 +34,7 @@ export function Table({ title, subtitle, actions, footer, children }: TableProps
       >
         {children}
       </div>
-      {footer && <div className="border-t border-border p-4">{footer}</div>}
+      {footer && <div className="border-t border-border p-3 sm:p-4">{footer}</div>}
     </section>
   )
 }

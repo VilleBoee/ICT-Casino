@@ -1,4 +1,5 @@
 import { colorOf } from '../../engine/roulette'
+import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 import { fmtChips } from '../../components'
 import { cellOf, insideSpots, spotKey, spotWins, type BetMap, type Spot } from './bets'
 
@@ -25,6 +26,16 @@ function Marker({ amount, won }: { amount?: number; won?: boolean }) {
 /** European betting layout: 0, 1–36 grid, columns, dozens, even-money bets, plus every inside bet
  *  (splits, streets, corners, six-lines, zero splits, trios, first four) as hit-spots over the grid. */
 export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
+  // Phones (and touch tablets) get the vertical table (0 on top, 12 rows of 3) with 64px rows and 32px inside-bet spots.
+  const vertical = useMediaQuery(`${PHONE}, (pointer: coarse) and (max-width: 1023.98px)`)
+  /** Grid placement for number n (1–36). */
+  const numPos = (n: number): React.CSSProperties => {
+    const { col, row } = cellOf(n)
+    return vertical ? { gridColumn: 3 - row, gridRow: col + 1 } : { gridColumn: col + 1, gridRow: row + 1 }
+  }
+  /** Inside-spot position: horizontal fractions (x along streets, y across) rotated for the vertical table. */
+  const spotPos = (x: number, y: number): React.CSSProperties =>
+    vertical ? { left: `${(1 - y) * 100}%`, top: `${x * 100}%` } : { left: `${x * 100}%`, top: `${y * 100}%` }
   const amt = (s: Spot) => bets[spotKey(s)]?.amount
   const cell = (s: Spot, label: React.ReactNode, cls: string, style?: React.CSSProperties, aria?: string) => (
     <button
@@ -33,7 +44,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
       onClick={() => onPlace(s)}
       style={style}
       aria-label={`${aria ?? String(label)}${amt(s) ? `, ${amt(s)} bet` : ''}${winning !== null && amt(s) && spotWins(s, winning) ? ', winner' : ''}`}
-      className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid min-h-10 place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
+      className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid ${vertical ? 'min-h-16' : 'min-h-10'} place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
     >
       {label}
       <Marker amount={amt(s)} won={winning !== null && spotWins(s, winning)} />
@@ -41,19 +52,19 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
   )
 
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="grid min-w-[640px] grid-cols-[3rem_repeat(12,minmax(0,1fr))_3rem] gap-0.5">
-        {cell({ kind: 'straight', number: 0 }, '0', `${NUM_BG.green} ${winning === 0 ? 'ring-2 ring-neon' : ''}`, { gridColumn: 1, gridRow: '1 / span 3' })}
+    <div className={vertical ? 'pb-2' : 'overflow-x-auto pb-2'}>
+      <div className={`grid gap-0.5 ${vertical ? 'grid-cols-3 px-3' : 'min-w-[640px] grid-cols-[3rem_repeat(12,minmax(0,1fr))_3rem]'}`}>
+        {cell({ kind: 'straight', number: 0 }, '0', `${NUM_BG.green} ${winning === 0 ? 'ring-2 ring-neon' : ''}`,
+          vertical ? { gridColumn: '1 / span 3', gridRow: 1 } : { gridColumn: 1, gridRow: '1 / span 3' })}
         {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => {
-          const { col, row } = cellOf(n)
           return (
-            <div key={n} style={{ gridColumn: col + 1, gridRow: row + 1 }} className="relative grid">
+            <div key={n} style={numPos(n)} className="relative grid">
               {cell({ kind: 'straight', number: n }, n, `${NUM_BG[colorOf(n)]} ${winning === n ? 'ring-2 ring-neon z-20' : ''}`)}
             </div>
           )
         })}
         {/* inside bets (splits, streets, corners, six-lines, zero bets) over the number grid */}
-        <div className="pointer-events-none relative" style={{ gridColumn: '2 / 14', gridRow: '1 / 4' }}>
+        <div className="pointer-events-none relative" style={vertical ? { gridColumn: '1 / 4', gridRow: '2 / 14' } : { gridColumn: '2 / 14', gridRow: '1 / 4' }}>
           {INSIDE.map(({ spot, x, y, label }) => {
             const a = amt(spot)
             const won = winning !== null && spotWins(spot, winning)
@@ -65,8 +76,8 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
                 onClick={() => onPlace(spot)}
                 title={label}
                 aria-label={`${label}${a ? `, ${a} bet` : ''}${won && a ? ', winner' : ''}`}
-                style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
-                className={`group pointer-events-auto absolute z-10 grid h-4 w-4 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
+                style={spotPos(x, y)}
+                className={`group pointer-events-auto absolute z-10 grid ${vertical ? 'h-8 w-8' : 'h-4 w-4'} -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
                   a ? '' : 'hover:bg-cyan/80 focus-visible:bg-cyan/80'
                 }`}
               >
@@ -80,11 +91,11 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
           })}
         </div>
         {([3, 2, 1] as const).map((c, r) =>
-          <div key={c} style={{ gridColumn: 14, gridRow: r + 1 }} className="grid">
+          <div key={c} style={vertical ? { gridColumn: c, gridRow: 14 } : { gridColumn: 14, gridRow: r + 1 }} className="grid">
             {cell({ kind: 'column', index: c }, '2:1', 'bg-surface', undefined, `Column ${c}`)}
           </div>)}
         {([1, 2, 3] as const).map((d) =>
-          <div key={d} style={{ gridColumn: `${2 + (d - 1) * 4} / span 4`, gridRow: 4 }} className="grid">
+          <div key={d} style={vertical ? { gridColumn: d, gridRow: 15 } : { gridColumn: `${2 + (d - 1) * 4} / span 4`, gridRow: 4 }} className="grid">
             {cell({ kind: 'dozen', index: d }, `${d === 1 ? '1st' : d === 2 ? '2nd' : '3rd'} 12`, 'bg-surface', undefined, `Dozen ${d}`)}
           </div>)}
         {([
@@ -95,7 +106,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
           [{ kind: 'odd' }, 'ODD', 'bg-surface', 'Odd'],
           [{ kind: 'high' }, '19–36', 'bg-surface', 'High 19 to 36'],
         ] as [Spot, string, string, string][]).map(([s, label, cls, aria], i) =>
-          <div key={spotKey(s)} style={{ gridColumn: `${2 + i * 2} / span 2`, gridRow: 5 }} className="grid">
+          <div key={spotKey(s)} style={vertical ? { gridColumn: (i % 3) + 1, gridRow: 16 + Math.floor(i / 3) } : { gridColumn: `${2 + i * 2} / span 2`, gridRow: 5 }} className="grid">
             {cell(s, label, cls, undefined, aria)}
           </div>)}
       </div>

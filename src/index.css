@@ -59,6 +59,11 @@
   ::selection { background: rgb(57 255 136 / 0.3); color: var(--color-fg); }
 }
 
+/* Touch screens: 44px minimum targets for buttons (desktop/mouse layout unchanged) */
+@media (pointer: coarse) {
+  .btn, .btn-primary, .btn-secondary, .btn-ghost { min-height: 44px; min-width: 44px; }
+}
+
 @keyframes scan-flicker {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 0.7; }

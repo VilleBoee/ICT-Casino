@@ -8,6 +8,7 @@ import { ActionBar } from './ActionBar'
 import { BuyIn } from './BuyIn'
 import { SeatView } from './SeatView'
 import { blindSeats, seatPosition } from './layout'
+import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 
 const BIG_BLIND = 20
 const BLIND_SCHEDULE = { everyHands: 10, factor: 1.5 } as const
@@ -24,6 +25,8 @@ function forceClose(t: HoldemTable) {
 export default function HoldemGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const phone = useMediaQuery(PHONE)
+  const narrow = useMediaQuery('(max-width: 1023.98px)')
   const table = useRef<HoldemTable | null>(null)
   const [version, bump] = useReducer((x: number) => x + 1, 0)
   const [thinking, setThinking] = useState<number | null>(null)
@@ -121,6 +124,8 @@ export default function HoldemGame() {
   }
 
   const n = t.seats.length
+  // compact list on phones, and on tablets when the oval would be crowded (8 bots)
+  const compact = phone || (narrow && n >= 9)
   const over = t.phase === 'handOver'
   const last = over ? t.lastHand : null
   const shown = new Map(last?.shown.map((s) => [s.seat, s.hand.name]) ?? [])
@@ -174,11 +179,26 @@ export default function HoldemGame() {
           </div>
         }
       >
-        <div className="relative mx-auto aspect-[4/5] w-full max-w-4xl sm:aspect-[16/9]">
-          {/* felt */}
-          <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
-          {/* board + pot */}
-          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2" aria-label="Board">
+        {compact ? (
+          /* phones: bots as a compact 2-column list, board in the middle, you at the bottom */
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              {t.seats.filter((s) => !s.human).map((s) => (
+                <SeatView key={s.index} compact seat={s} pos={{ left: 0, top: 0 }}
+              dealer={s.index === t.dealer}
+              blind={s.index === sb ? 'SB' : s.index === bb ? 'BB' : null}
+              toAct={t.toAct === s.index}
+              thinking={thinking === s.index}
+              reveal={over && shown.has(s.index)}
+              winner={over && winners.has(s.index)}
+              handName={over ? shown.get(s.index) : undefined}
+              won={over ? last?.won[s.index] : undefined}
+              handNo={t.handNo} />
+              ))}
+            </div>
+            <div className="rounded-[2rem] border-2 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_80%)] px-2 py-3">
+              {/* board + pot */}
+          <div className={`flex flex-col items-center gap-2 ${compact ? 'py-1' : 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'}`} aria-label="Board">
             <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">
               {pots.length === 0 ? null : pots.length === 1 || over
                 ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">pot <span className="num">{t.pot}</span></span>
@@ -201,23 +221,64 @@ export default function HoldemGame() {
               </p>
             )}
           </div>
-          {t.seats.map((s) => (
-            <SeatView
-              key={s.index}
-              seat={s}
-              pos={seatPosition(s.index, n)}
-              dealer={s.index === t.dealer}
-              blind={s.index === sb ? 'SB' : s.index === bb ? 'BB' : null}
-              toAct={t.toAct === s.index}
-              thinking={thinking === s.index}
-              reveal={over && shown.has(s.index)}
-              winner={over && winners.has(s.index)}
-              handName={over ? shown.get(s.index) : undefined}
-              won={over ? last?.won[s.index] : undefined}
-              handNo={t.handNo}
-            />
-          ))}
-        </div>
+            </div>
+            <SeatView compact seat={human} pos={{ left: 50, top: 90 }}
+              dealer={0 === t.dealer}
+              blind={0 === sb ? 'SB' : 0 === bb ? 'BB' : null}
+              toAct={t.toAct === 0}
+              thinking={thinking === 0}
+              reveal={over && shown.has(0)}
+              winner={over && winners.has(0)}
+              handName={over ? shown.get(0) : undefined}
+              won={over ? last?.won[0] : undefined}
+              handNo={t.handNo} />
+          </div>
+        ) : (
+        <div className={`relative mx-auto aspect-[4/5] w-full max-w-4xl ${n >= 8 ? "sm:aspect-[4/3] lg:aspect-[16/10] lg:my-4" : "sm:aspect-[16/9]"}`}>
+            {/* felt */}
+            <div className="absolute inset-[12%_8%] rounded-[50%] border-4 border-[#1c3a2c] bg-[radial-gradient(ellipse_at_center,#0f3b28,#08160f_75%)] shadow-[inset_0_0_40px_rgb(0_0_0/.6)]" aria-hidden />
+            {/* board + pot */}
+            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2" aria-label="Board">
+              <div className="flex flex-wrap items-center justify-center gap-1 font-mono text-xs" aria-live="polite">
+                {pots.length === 0 ? null : pots.length === 1 || over
+                  ? <span className="rounded-full border border-neon/50 bg-bg/80 px-3 py-0.5 text-neon">pot <span className="num">{t.pot}</span></span>
+                  : pots.map((p, i) => (
+                    <span key={i} className="rounded-full border border-neon/50 bg-bg/80 px-2 py-0.5 text-neon">{i === 0 ? 'main' : `side ${i}`} <span className="num">{p.amount}</span></span>
+                  ))}
+              </div>
+              <div className="flex min-h-[4.5rem] gap-1" key={t.handNo}>
+                {t.board.map((c, i) => (
+                  <Card key={i} card={c} size="sm" dealIndex={i < 3 ? i : 0}
+                    highlight={false} />
+                ))}
+              </div>
+              {over && topWin && (
+                <p className="rounded bg-bg/85 px-2 py-0.5 text-center font-mono text-xs sm:text-sm" role="status">
+                  <span className="text-win">{topWin.winners.map((w) => t.seats[w].human ? 'You' : `@${t.seats[w].name}`).join(' & ')}</span>
+                  {' '}win{topWin.winners.length === 1 && !t.seats[topWin.winners[0]].human ? 's' : ''} {topWin.amount}
+                  {topWin.hand && <> with <span className="font-bold text-neon">{topWin.hand}</span></>}
+                  {last && last.pots.length > 1 && <span className="text-muted"> (+{last.pots.length - 1} side pot{last.pots.length > 2 ? 's' : ''})</span>}
+                </p>
+              )}
+            </div>
+            {t.seats.map((s) => (
+              <SeatView
+                key={s.index}
+                seat={s}
+                pos={seatPosition(s.index, n, n >= 9 ? 46 : 44, n >= 9 ? 42 : 40)}
+                dealer={s.index === t.dealer}
+                blind={s.index === sb ? 'SB' : s.index === bb ? 'BB' : null}
+                toAct={t.toAct === s.index}
+                thinking={thinking === s.index}
+                reveal={over && shown.has(s.index)}
+                winner={over && winners.has(s.index)}
+                handName={over ? shown.get(s.index) : undefined}
+                won={over ? last?.won[s.index] : undefined}
+                handNo={t.handNo}
+              />
+            ))}
+          </div>
+        )}
       </Table>
     </div>
   )

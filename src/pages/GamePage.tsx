@@ -21,7 +21,7 @@ export default function GamePage({ id }: { id: string }) {
   const Screen = SCREENS[game.id]
   return (
     <div className="space-y-6">
-      <a href={href('/')} className="font-mono text-sm">← cd ..</a>
+      <a href={href("/")} className="inline-block font-mono text-sm pointer-coarse:py-3">← cd ..</a>
       {Screen ? <Screen /> : (
         <div className="panel space-y-3 text-center">
           <p className="font-mono text-5xl text-neon" aria-hidden>{game.icon}</p>
