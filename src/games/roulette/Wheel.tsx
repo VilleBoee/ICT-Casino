@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { colorOf } from '../../engine/roulette'
-import { POCKET_DEG, WHEEL_ORDER } from './wheelMath'
+import { BALL_PHASES, POCKET_DEG, WHEEL_ORDER } from './wheelMath'
 
 const FILL = { red: '#b91c3a', black: '#141b1e', green: '#0f8a4a' } as const
 const R = 140
@@ -21,7 +21,7 @@ function wedge(i: number, r0: number, r1: number) {
 export interface WheelProps {
   /** Wheel rotation in degrees; the pocket at the top pointer wins. */
   rotation: number
-  /** Ball orbit angle (screen space), ends at 0 (top). */
+  /** Ball orbit angle (screen space, 0 = top); ends over the winning pocket wherever the wheel stops. */
   ballAngle: number
   spinning: boolean
   durationS: number
@@ -29,10 +29,19 @@ export interface WheelProps {
   winning: number | null
 }
 
-/** SVG European wheel. Wheel spins clockwise, ball counter-clockwise, both stop at the top pointer. */
+/**
+ * SVG European wheel. Wheel spins clockwise, ball counter-clockwise; both use the same duration so they end together.
+ * Under reduced motion it's a quick, simple rotation (no spiral or bounce).
+ */
 export function Wheel({ rotation, ballAngle, spinning, durationS, onSettled, winning }: WheelProps) {
   const reduce = useReducedMotion()
-  const t = reduce || !spinning ? { duration: 0 } : { duration: durationS, ease: [0.12, 0.6, 0.15, 1] as const }
+  const still = { duration: 0 }
+  // long ease-out: fast start, slow believable coast to a stop
+  const wheelT = !spinning ? still : reduce ? { duration: durationS, ease: 'easeOut' as const } : { duration: durationS, ease: [0.2, 0.62, 0.12, 1] as const }
+  // ball sheds speed a little faster than the wheel (friction on the rim), same end time
+  const ballT = !spinning ? still : reduce ? wheelT : { duration: durationS, ease: [0.1, 0.72, 0.16, 1] as const }
+  const P = BALL_PHASES
+  const RIM = C - 150, POCKET = C - (R - 20)
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[320px]">
       <svg viewBox="0 0 320 320" className="h-full w-full" role="img"
@@ -42,7 +51,7 @@ export function Wheel({ rotation, ballAngle, spinning, durationS, onSettled, win
           style={{ originX: '50%', originY: '50%' }}
           initial={false}
           animate={{ rotate: rotation }}
-          transition={t}
+          transition={wheelT}
           onAnimationComplete={() => spinning && onSettled()}
         >
           {WHEEL_ORDER.map((n, i) => {
@@ -65,12 +74,19 @@ export function Wheel({ rotation, ballAngle, spinning, durationS, onSettled, win
           <circle cx={C} cy={C} r={18} fill="#141b1e" stroke="#39ff88" strokeOpacity={0.6} />
         </motion.g>
         {/* ball orbit */}
-        <motion.g style={{ originX: '50%', originY: '50%' }} initial={false} animate={{ rotate: ballAngle }} transition={t}>
+        <motion.g style={{ originX: '50%', originY: '50%' }} initial={false} animate={{ rotate: ballAngle }} transition={ballT}>
+          {/* invisible full-size circle: makes this group's box the wheel, so it rotates around the wheel centre, not the ball */}
+          <circle cx={C} cy={C} r={158} fill="none" stroke="none" pointerEvents="none" />
           <motion.circle
             cx={C}
             initial={false}
-            animate={{ cy: spinning && !reduce ? [C - 150, C - 150, C - (R - 20)] : C - (R - 20) }}
-            transition={reduce || !spinning ? { duration: 0 } : { duration: durationS, times: [0, 0.6, 1] }}
+            // orbit on the rim, spiral in, drop into the pocket, bounce out once, settle
+            animate={{ cy: spinning && !reduce ? [RIM, RIM, POCKET + 2, POCKET - 9, POCKET + 1, POCKET] : POCKET }}
+            transition={!spinning || reduce ? still : {
+              duration: durationS,
+              times: [0, P.spiralStart, P.drop, P.bounceUp, (P.bounceUp + P.settle) / 2 + 0.02, P.settle],
+              ease: ['linear', 'easeIn', 'easeOut', 'easeIn', 'easeOut'],
+            }}
             r={6} fill="#f5f7fa" stroke="#93a1ad"
           />
         </motion.g>

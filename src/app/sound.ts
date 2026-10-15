@@ -100,3 +100,24 @@ export function useSound() {
 
 /** Test helper. */
 export function __resetSound(next?: Partial<State>) { state = { ...read(), ...next }; howls.clear(); lastPlayed.clear(); emit() }
+
+/** Handle for a looping sound whose rate/volume can be driven over time (e.g. a slowing roulette wheel). */
+export interface LoopHandle { update(rate: number, volume: number): void; fadeOut(ms: number): void; stop(): void }
+const NOOP_LOOP: LoopHandle = { update() {}, fadeOut() {}, stop() {} }
+
+/** Start `name` looping. Same gating as play(); returns a no-op handle when it can't play. */
+export function playLoop(name: Sfx, volume = 1): LoopHandle {
+  if (state.muted || !state.unlocked) return NOOP_LOOP
+  if (MOTION_ONLY.has(name) && reducedMotion()) return NOOP_LOOP
+  let h: HowlT | null = null, id: number | null = null, dead = false
+  let rate = 1, vol = volume
+  void getHowl(name).then((howl) => {
+    if (dead || state.muted) return
+    h = howl; id = howl.play(); howl.loop(true, id); howl.rate(rate, id); howl.volume(vol, id)
+  }).catch(() => { /* audio unavailable */ })
+  return {
+    update(r, v) { rate = r; vol = v; if (h && id !== null && !dead) { h.rate(r, id); h.volume(v, id) } },
+    fadeOut(ms) { if (h && id !== null && !dead) { h.fade(h.volume(id) as number, 0, ms, id); const hh = h, ii = id; setTimeout(() => hh.stop(ii), ms + 20) } dead = true },
+    stop() { dead = true; if (h && id !== null) h.stop(id) },
+  }
+}
