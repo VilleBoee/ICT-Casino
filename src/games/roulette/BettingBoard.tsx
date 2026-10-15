@@ -2,6 +2,7 @@ import { colorOf } from '../../engine/roulette'
 import { PHONE, useMediaQuery } from '../../app/useMediaQuery'
 import { fmtChips } from '../../components'
 import { cellOf, insideSpots, spotKey, spotWins, type BetMap, type Spot } from './bets'
+import { useT } from '../../i18n'
 
 const INSIDE = insideSpots()
 
@@ -28,6 +29,7 @@ function Marker({ amount, won }: { amount?: number; won?: boolean }) {
 export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
   // Phones (and touch tablets) get the vertical table (0 on top, 12 rows of 3) with 88px rows and 44px inside-bet hit areas
   // (splits sit half a row from corners/streets, so 88px rows keep neighbouring 44px targets from overlapping).
+  const t = useT()
   const vertical = useMediaQuery(`${PHONE}, (pointer: coarse) and (max-width: 1023.98px)`)
   /** Grid placement for number n (1–36). */
   const numPos = (n: number): React.CSSProperties => {
@@ -45,7 +47,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
       disabled={disabled}
       onClick={() => onPlace(s)}
       style={style}
-      aria-label={`${aria ?? String(label)}${amt(s) ? `, ${amt(s)} bet` : ''}${winning !== null && amt(s) && spotWins(s, winning) ? ', winner' : ''}`}
+      aria-label={`${aria ?? String(label)}${amt(s) ? t('rl.betSuffix', { n: amt(s)! }) : ''}${winning !== null && amt(s) && spotWins(s, winning) ? t('rl.winner') : ''}`}
       className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid ${vertical ? (s.kind === 'straight' && s.number !== 0 ? 'min-h-[88px]' : 'min-h-16') : 'min-h-10'} place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
     >
       {label}
@@ -67,7 +69,8 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
         })}
         {/* inside bets (splits, streets, corners, six-lines, zero bets) over the number grid */}
         <div className="pointer-events-none relative" style={vertical ? { gridColumn: '1 / 4', gridRow: '2 / 14' } : { gridColumn: '2 / 14', gridRow: '1 / 4' }}>
-          {INSIDE.map(({ spot, x, y, label }) => {
+          {INSIDE.map(({ spot, x, y, labelKind }) => {
+            const label = `${t(`rl.k.${labelKind}`)} ${spot.numbers.join(', ')}`
             const a = amt(spot)
             const won = winning !== null && spotWins(spot, winning)
             return (
@@ -78,7 +81,7 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
                 disabled={disabled}
                 onClick={() => onPlace(spot)}
                 title={label}
-                aria-label={`${label}${a ? `, ${a} bet` : ''}${won && a ? ', winner' : ''}`}
+                aria-label={`${label}${a ? t('rl.betSuffix', { n: a }) : ''}${won && a ? t('rl.winner') : ''}`}
                 style={spotPos(x, y)}
                 className={`group pointer-events-auto absolute z-10 grid ${vertical ? 'h-11 w-11' : 'h-4 w-4'} -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
                   a || vertical ? '' : 'hover:bg-cyan/80 focus-visible:bg-cyan/80'
@@ -98,19 +101,19 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
         </div>
         {([3, 2, 1] as const).map((c, r) =>
           <div key={c} style={vertical ? { gridColumn: c, gridRow: 14 } : { gridColumn: 14, gridRow: r + 1 }} className="grid">
-            {cell({ kind: 'column', index: c }, '2:1', 'bg-surface', undefined, `Column ${c}`)}
+            {cell({ kind: 'column', index: c }, '2:1', 'bg-surface', undefined, t('rl.column', { n: c }))}
           </div>)}
         {([1, 2, 3] as const).map((d) =>
           <div key={d} style={vertical ? { gridColumn: d, gridRow: 15 } : { gridColumn: `${2 + (d - 1) * 4} / span 4`, gridRow: 4 }} className="grid">
-            {cell({ kind: 'dozen', index: d }, `${d === 1 ? '1st' : d === 2 ? '2nd' : '3rd'} 12`, 'bg-surface', undefined, `Dozen ${d}`)}
+            {cell({ kind: 'dozen', index: d }, t(`rl.d${d}`), 'bg-surface', undefined, t('rl.dozen', { n: d }))}
           </div>)}
         {([
-          [{ kind: 'low' }, '1–18', 'bg-surface', 'Low 1 to 18'],
-          [{ kind: 'even' }, 'EVEN', 'bg-surface', 'Even'],
-          [{ kind: 'red' }, '◆', `${NUM_BG.red} text-fg`, 'Red'],
-          [{ kind: 'black' }, '◆', NUM_BG.black, 'Black'],
-          [{ kind: 'odd' }, 'ODD', 'bg-surface', 'Odd'],
-          [{ kind: 'high' }, '19–36', 'bg-surface', 'High 19 to 36'],
+          [{ kind: 'low' }, '1–18', 'bg-surface', t('rl.low')],
+          [{ kind: 'even' }, t('rl.EVEN'), 'bg-surface', t('rl.evenBet')],
+          [{ kind: 'red' }, '◆', `${NUM_BG.red} text-fg`, t('rl.redBet')],
+          [{ kind: 'black' }, '◆', NUM_BG.black, t('rl.blackBet')],
+          [{ kind: 'odd' }, t('rl.ODD'), 'bg-surface', t('rl.oddBet')],
+          [{ kind: 'high' }, '19–36', 'bg-surface', t('rl.high')],
         ] as [Spot, string, string, string][]).map(([s, label, cls, aria], i) =>
           <div key={spotKey(s)} style={vertical ? { gridColumn: (i % 3) + 1, gridRow: 16 + Math.floor(i / 3) } : { gridColumn: `${2 + i * 2} / span 2`, gridRow: 5 }} className="grid">
             {cell(s, label, cls, undefined, aria)}

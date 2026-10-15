@@ -64,9 +64,10 @@ const S = {
     return b
   },
   win: () => {
-    const b = buf(0.9)
-    ;[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-      add(b, i * 0.09, (t) => 0.18 * (square(f)(t) * 0.5 + sine(f)(t)) * env(t, 0.005, i === 3 ? 0.35 : 0.12), 0.6)
+    // soft, short two-note chime: pure sines with a gentle attack (was a 4-note square-wave arpeggio, #74)
+    const b = buf(0.45)
+    ;[659.25, 987.77].forEach((f, i) => {
+      add(b, i * 0.08, (t) => 0.12 * (sine(f)(t) + 0.25 * sine(f * 2)(t)) * env(t, 0.012, i === 1 ? 0.14 : 0.07), 0.37)
     })
     return b
   },
@@ -102,11 +103,28 @@ function wav(samples) {
   return Buffer.concat([h, data])
 }
 
+// Loudness targets (EBU R128 integrated, LUFS). Everything sits at -24; the win jingle is deliberately quieter (#74).
+const TARGET = { default: -24, win: -28 }
+const PEAK_CEIL = -3 // dBFS
+
+/** Integrated loudness and sample peak of a file. Short clips are padded with silence (gated out) so they get a reading. */
+function loudness(file) {
+  const out = execFileSync('sh', ['-c', `ffmpeg -nostats -i "${file}" -af "apad=pad_dur=1,ebur128=peak=sample" -f null - 2>&1`], { encoding: 'utf8' })
+  const summary = out.slice(out.lastIndexOf('Summary:'))
+  return { I: Number(summary.match(/I:\s+(-?[\d.]+) LUFS/)[1]), peak: Number(summary.match(/Peak:\s+(-?[\d.]+) dBFS/)[1]) }
+}
+
 for (const [name, make] of Object.entries(S)) {
-  const tmp = join(OUT, `${name}.wav`)
+  const tmp = join(OUT, `${name}.wav`), norm = join(OUT, `${name}.norm.wav`)
   writeFileSync(tmp, wav(make()))
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-c:a', 'libvorbis', '-q:a', '2', join(OUT, `${name}.ogg`)])
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-c:a', 'libmp3lame', '-b:a', '48k', join(OUT, `${name}.mp3`)])
-  rmSync(tmp)
+  // normalise: one fixed gain to the target, but never above the peak ceiling
+  const { I, peak } = loudness(tmp)
+  const target = TARGET[name] ?? TARGET.default
+  const gain = Math.min(target - I, PEAK_CEIL - peak)
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-af', `volume=${gain.toFixed(2)}dB`, norm])
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', norm, '-c:a', 'libvorbis', '-q:a', '2', join(OUT, `${name}.ogg`)])
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', norm, '-c:a', 'libmp3lame', '-b:a', '48k', join(OUT, `${name}.mp3`)])
+  rmSync(tmp); rmSync(norm)
+  console.log(`${name.padEnd(5)} ${I.toFixed(1)} LUFS -> ${(I + gain).toFixed(1)} (gain ${gain.toFixed(1)} dB)`)
 }
 console.log('generated', Object.keys(S).join(', '))

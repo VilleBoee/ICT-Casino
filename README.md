@@ -168,4 +168,4 @@ ICT-Casino is for **entertainment and education only**. It uses virtual chips wi
 
 ## Sounds
 
-All sound effects in `public/sfx/` are original, synthesized by `scripts/gen-sfx.mjs` (ffmpeg). They contain no third-party samples and are dedicated to the public domain (CC0). To regenerate them, run `node scripts/gen-sfx.mjs`. The top-bar toggle mutes all sound, and the choice is saved in localStorage. With no saved choice the game stays silent until the first interaction.
+All sound effects in `public/sfx/` are original, synthesized by `scripts/gen-sfx.mjs` (ffmpeg). They contain no third-party samples and are dedicated to the public domain (CC0). To regenerate them, run `node scripts/gen-sfx.mjs`; the script loudness-normalises every sound to -24 LUFS (the win chime to -28). In the app each sound plays at master volume × its level in `SFX_LEVEL` (`src/app/sound.ts`). The master volume (default 40%) and mute live in the settings store (`ict-casino:settings`) and are set from the top bar. Browsers keep it silent until your first click or key press.

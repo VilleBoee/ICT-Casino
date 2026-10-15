@@ -1,11 +1,13 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { useMemo } from 'react'
+import { useT } from '../../i18n'
 
 const W = 600, H = 200, PAD = { l: 44, r: 8, t: 10, b: 18 }
 
 /** Terminal-style balance line: plain SVG, no chart lib. */
 export function BalanceChart({ points }: { points: { at: number; balance: number }[] }) {
   const reduce = useReducedMotion()
+  const t = useT()
   const geo = useMemo(() => {
     const vals = points.map((p) => p.balance)
     let lo = Math.min(...vals), hi = Math.max(...vals)
@@ -19,15 +21,15 @@ export function BalanceChart({ points }: { points: { at: number; balance: number
   const up = points.length > 1 && points[points.length - 1].balance >= points[0].balance
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full font-mono" role="img"
-      aria-label={`Balance over ${points.length} rounds, from ${points[0]?.balance ?? 0} to ${points[points.length - 1]?.balance ?? 0} chips`}>
+      aria-label={t('stats.chartAria', { n: points.length, a: points[0]?.balance ?? 0, b: points[points.length - 1]?.balance ?? 0 })}>
       {geo.ticks.map((t) => (
         <g key={t.y}>
           <line x1={PAD.l} x2={W - PAD.r} y1={t.y} y2={t.y} stroke="currentColor" className="text-border" strokeDasharray="2 4" />
           <text x={PAD.l - 6} y={t.y + 4} textAnchor="end" fontSize="11" className="fill-muted">{t.v}</text>
         </g>
       ))}
-      <text x={PAD.l} y={H - 4} fontSize="11" className="fill-muted">round 1</text>
-      <text x={W - PAD.r} y={H - 4} fontSize="11" textAnchor="end" className="fill-muted">round {points.length}</text>
+      <text x={PAD.l} y={H - 4} fontSize="11" className="fill-muted">{t('stats.round', { n: 1 })}</text>
+      <text x={W - PAD.r} y={H - 4} fontSize="11" textAnchor="end" className="fill-muted">{t('stats.round', { n: points.length })}</text>
       <motion.path d={geo.d} fill="none" strokeWidth="2" strokeLinejoin="round"
         className={up ? 'stroke-neon' : 'stroke-lose'} style={{ filter: 'drop-shadow(0 0 4px currentColor)' }}
         initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduce ? 0 : 0.9, ease: 'easeOut' }} />

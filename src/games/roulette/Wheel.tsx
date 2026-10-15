@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { colorOf } from '../../engine/roulette'
 import { BALL_PHASES, POCKET_DEG, WHEEL_ORDER } from './wheelMath'
+import { useT } from '../../i18n'
 
 const FILL = { red: '#b91c3a', black: '#141b1e', green: '#0f8a4a' } as const
 const R = 140
@@ -42,10 +43,11 @@ export function Wheel({ rotation, ballAngle, spinning, durationS, onSettled, win
   const ballT = !spinning ? still : reduce ? wheelT : { duration: durationS, ease: [0.1, 0.72, 0.16, 1] as const }
   const P = BALL_PHASES
   const RIM = C - 150, POCKET = C - (R - 20)
+  const tr = useT()
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[320px]">
       <svg viewBox="0 0 320 320" className="h-full w-full" role="img"
-        aria-label={winning === null ? 'Roulette wheel' : `Roulette wheel showing ${winning}`}>
+        aria-label={winning === null ? tr('rl.wheel') : tr('rl.wheelShowing', { n: winning })}>
         <circle cx={C} cy={C} r={158} fill="#0d1214" stroke="#24303a" strokeWidth={2} />
         <motion.g
           style={{ originX: '50%', originY: '50%' }}

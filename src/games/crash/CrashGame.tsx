@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useT } from '../../i18n'
+import { errorText } from '../../i18n/errors'
 import { motion, useReducedMotion } from 'framer-motion'
 import { BetPanel, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
@@ -16,6 +18,7 @@ type View = { t: number; m: number; status: CrashStatus; ended: boolean; cashedA
 export default function CrashGame() {
   const { balance, wallet } = useWallet()
   const reduce = useReducedMotion()
+  const t = useT()
   const [bet, setBet] = useState<Chips>(10)
   const [lastBet, setLastBet] = useState<Chips>()
   const [autoStr, setAutoStr] = useState('')
@@ -51,7 +54,7 @@ export default function CrashGame() {
   const launch = () => {
     if (live) return
     let r: CrashRound
-    try { r = new CrashRound(wallet, bet, auto ? { autoCashOut: auto } : {}) } catch (e) { setError((e as Error).message); return }
+    try { r = new CrashRound(wallet, bet, auto ? { autoCashOut: auto } : {}) } catch (e) { setError(errorText(e, t)); return }
     setError(null); setToast(null); setResult(null); setLastBet(bet)
     round.current = r
     settled.current = false
@@ -109,10 +112,10 @@ export default function CrashGame() {
     <div className="space-y-4">
       <Table
         title="crash.tsx"
-        subtitle="1% house edge · provably fair seed"
+        subtitle={t('cr.subtitle')}
         actions={
-          <div className="flex max-w-[60vw] gap-1 overflow-x-auto" aria-label="Recent crash points">
-            {history.length === 0 && <span className="font-mono text-xs text-muted">no rounds yet</span>}
+          <div className="flex max-w-[60vw] gap-1 overflow-x-auto" aria-label={t('cr.recent')}>
+            {history.length === 0 && <span className="font-mono text-xs text-muted">{t('cr.noRounds')}</span>}
             {history.map((p, i) => (
               <span key={i} className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[11px] ${pointColor(p)}`}>{fmtX(p)}</span>
             ))}
@@ -123,12 +126,12 @@ export default function CrashGame() {
             <BetPanel balance={balance} bet={bet} onBetChange={setBet} lastBet={lastBet} disabled={live} />
             <div className="flex flex-col justify-between gap-3 md:w-64">
               <label className="space-y-1">
-                <span className="font-mono text-xs uppercase tracking-wider text-muted">auto cash-out</span>
-                <input inputMode="decimal" placeholder="off (e.g. 2.00)" value={autoStr} disabled={live}
+                <span className="font-mono text-xs uppercase tracking-wider text-muted">{t('cr.auto')}</span>
+                <input inputMode="decimal" placeholder={t('cr.autoPh')} value={autoStr} disabled={live}
                   onChange={(e) => setAutoStr(e.target.value)}
                   aria-invalid={!!autoStr && !auto}
                   className="num w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-fg placeholder:text-muted/70 aria-[invalid=true]:border-lose" />
-                {autoStr && !auto && <span className="text-xs text-lose">min 1.01x</span>}
+                {autoStr && !auto && <span className="text-xs text-lose">{t('cr.min')}</span>}
               </label>
               {canCash ? (
                 <button type="button" onClick={cashOut} className="btn-primary h-16 w-full text-lg">
@@ -137,7 +140,7 @@ export default function CrashGame() {
               ) : (
                 <button id="crash-launch" type="button" onClick={launch} disabled={live || bet <= 0 || bet > balance}
                   className="btn-secondary h-16 w-full text-lg">
-                  {live ? (status === 'cashed' ? 'cashed — waiting…' : '…') : `LAUNCH ${bet}`}
+                  {live ? (status === 'cashed' ? t('cr.waiting') : '…') : t('cr.launch', { n: bet })}
                 </button>
               )}
               {error && <p role="alert" className="text-sm text-warn">{error}</p>}
@@ -152,8 +155,8 @@ export default function CrashGame() {
                 const y = toXY(0, v, s).y
                 return (
                   <g key={v}>
-                    <line x1={0} x2={VIEW_W} y1={y} y2={y} stroke="#24303a" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />
-                    <text x={6} y={y - 3} fill="#93a1ad" fontSize={11}>{fmtX(v)}</text>
+                    <line x1={0} x2={VIEW_W} y1={y} y2={y} stroke="var(--color-border)" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />
+                    <text x={6} y={y - 3} fill="var(--color-muted)" fontSize={11}>{fmtX(v)}</text>
                   </g>
                 )
               })}
@@ -162,16 +165,16 @@ export default function CrashGame() {
                   <polyline points={`${curvePoints(view.t, crashedOut ? m : Infinity)} ${tip.x},${VIEW_H} 0,${VIEW_H}`}
                     fill={crashedOut && !cashedAt ? 'rgb(248 113 113 / .08)' : 'rgb(57 255 136 / .08)'} stroke="none" />
                   <polyline points={curvePoints(view.t, crashedOut ? m : Infinity)} fill="none"
-                    stroke={crashedOut ? '#f87171' : '#39ff88'} strokeWidth={3} vectorEffect="non-scaling-stroke"
-                    style={{ filter: `drop-shadow(0 0 6px ${crashedOut ? '#f87171' : '#39ff88'})` }} />
+                    stroke={crashedOut ? 'var(--color-lose)' : 'var(--color-neon)'} strokeWidth={3} vectorEffect="non-scaling-stroke"
+                    style={{ filter: `drop-shadow(0 0 6px ${crashedOut ? 'var(--color-lose)' : 'var(--color-neon)'})` }} />
                   {cashedAt && (() => {
                     const c = toXY(timeForMultiplier(cashedAt), cashedAt, s)
-                    return <circle cx={c.x} cy={c.y} r={5} fill="#4ade80" vectorEffect="non-scaling-stroke" />
+                    return <circle cx={c.x} cy={c.y} r={5} fill="var(--color-win)" vectorEffect="non-scaling-stroke" />
                   })()}
                   {crashedOut ? (
-                    <motion.circle cx={tip.x} cy={tip.y} fill="#f87171" initial={{ r: 4, opacity: 1 }} animate={{ r: 60, opacity: 0 }} transition={{ duration: 0.6 }} />
+                    <motion.circle cx={tip.x} cy={tip.y} fill="var(--color-lose)" initial={{ r: 4, opacity: 1 }} animate={{ r: 60, opacity: 0 }} transition={{ duration: 0.6 }} />
                   ) : (
-                    <circle cx={tip.x} cy={tip.y} r={5} fill="#39ff88" />
+                    <circle cx={tip.x} cy={tip.y} r={5} fill="var(--color-neon)" />
                   )}
                 </>
               )}
@@ -185,7 +188,7 @@ export default function CrashGame() {
                 initial={crashedOut && !reduce ? { scale: 1.4 } : false}
                 animate={{ scale: 1 }}
                 className={`num text-5xl font-extrabold sm:text-7xl ${readoutColor} ${crashedOut ? '' : 'text-glow'}`}
-                aria-label={view ? `multiplier ${fmtX(m)}` : 'ready'}
+                aria-label={view ? t('cr.mult', { x: fmtX(m) }) : t('cr.ready')}
               >
                 {view ? fmtX(m) : '1.00x'}
               </motion.p>
@@ -196,7 +199,7 @@ export default function CrashGame() {
           </div>
         </div>
       </Table>
-      <ResultToast result={toast} message={toast ? (toast.outcome.cashedAt ? `cashed @ ${fmtX(toast.outcome.cashedAt)}` : `crashed @ ${fmtX(toast.outcome.crashPoint)}`) : undefined} onDismiss={() => setToast(null)} sound={!!toast?.outcome.cashedAt} />
+      <ResultToast result={toast} message={toast ? (toast.outcome.cashedAt ? t('cr.cashedAt', { x: fmtX(toast.outcome.cashedAt) }) : t('cr.crashedAt', { x: fmtX(toast.outcome.crashPoint) })) : undefined} onDismiss={() => setToast(null)} sound={!!toast?.outcome.cashedAt} />
     </div>
   )
 }

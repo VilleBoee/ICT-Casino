@@ -41,11 +41,14 @@ export const cellOf = (n: number) => ({ col: Math.ceil(n / 3), row: 2 - ((n - 1)
  * An inside-bet hit-spot drawn over the 1–36 grid. x/y are fractions of the number grid:
  * x=0 is the edge shared with 0, x=1 the column-bet edge; y=0 top (3,6,…), y=1 bottom (1,4,…) edge.
  */
-export interface InsideSpot { spot: Spot & { numbers: number[] }; x: number; y: number; label: string }
+export type InsideLabel = InsideKind | 'trio' | 'firstFour'
+/** `label` is English (tests/aria fallback); `labelKind` lets the UI translate it. */
+export interface InsideSpot { spot: Spot & { numbers: number[] }; x: number; y: number; label: string; labelKind: InsideLabel }
 
 const LABEL: Record<InsideKind, string> = { split: 'Split', street: 'Street', corner: 'Corner', line: 'Six line' }
+const NAMED: Record<string, InsideLabel> = { Trio: 'trio', 'First four': 'firstFour' }
 const mk = (kind: InsideKind, numbers: number[], x: number, y: number, name?: string): InsideSpot => ({
-  spot: { kind, numbers }, x, y, label: `${name ?? LABEL[kind]} ${numbers.join(', ')}`,
+  spot: { kind, numbers }, x, y, label: `${name ?? LABEL[kind]} ${numbers.join(', ')}`, labelKind: name ? NAMED[name] : kind,
 })
 
 /** Every inside bet except straight-ups, with its position. */

@@ -1,4 +1,5 @@
 import type { GameId } from '../engine/types'
+import type { Key, T } from '../i18n'
 
 export interface GameInfo {
   id: GameId
@@ -19,4 +20,8 @@ export const GAMES: GameInfo[] = [
   { id: 'crash', name: 'Crash', tagline: 'Cash out before it crashes', icon: '↗', ready: true },
   { id: 'dice', name: 'Dice', tagline: 'Roll over / under', icon: '⚄', ready: true },
 ]
+/** Localised game name / tagline. */
+export const gameName = (t: T, id: GameId) => t(`game.${id}.name` as Key)
+export const gameTagline = (t: T, id: GameId) => t(`game.${id}.tagline` as Key)
+
 export const gameById = (id: string) => GAMES.find((g) => g.id === id)

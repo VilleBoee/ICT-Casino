@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { play } from '../app/sound'
 import type { Card as EngineCard, Rank, Suit } from '../engine/types'
+import { useT, type Key, type T } from '../i18n'
 
 const RANK_LABEL: Record<Rank, string> = {
   2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
@@ -12,6 +13,9 @@ const RANK_NAME: Partial<Record<Rank, string>> = { 11: 'jack', 12: 'queen', 13: 
 
 export const rankLabel = (r: Rank) => RANK_LABEL[r]
 export const suitGlyph = (s: Suit) => SUIT_GLYPH[s]
+/** Localised aria label, e.g. "queen of hearts" / "hertta kuningatar". */
+export const cardLabelT = (t: T, c: EngineCard) =>
+  t('card.of', { r: c.rank >= 11 ? t(`card.r.${c.rank}` as Key) : c.rank, s: t(`card.s.${c.suit}`) })
 export const cardLabel = (c: EngineCard) => `${RANK_NAME[c.rank] ?? c.rank} of ${SUIT_NAME[c.suit]}`
 
 export interface CardProps {
@@ -24,11 +28,14 @@ export interface CardProps {
   highlight?: boolean
 }
 
+/** Corner index (rank over suit), sized relative to the card's font size. */
+const CORNER = 'absolute flex flex-col items-center text-[0.8em] leading-[0.95] tracking-tighter'
 const SIZES = { sm: 'w-12 h-[4.5rem] text-sm', md: 'w-16 h-24 text-base', lg: 'w-20 h-[7.5rem] text-lg' }
 
 /** Playing card rendered from the engine `Card` type, with deal + flip animations. */
 export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highlight = false }: CardProps) {
   const reduce = useReducedMotion()
+  const t = useT()
   // deal swish timed with the deal animation; flip snap whenever faceDown changes
   useEffect(() => {
     if (reduce) return
@@ -47,8 +54,8 @@ export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highl
   return (
     <motion.div
       role="img"
-      aria-label={faceDown ? 'face-down card' : cardLabel(card)}
-      className={`relative shrink-0 [perspective:600px] ${SIZES[size]}`}
+      aria-label={faceDown ? t('card.down') : cardLabelT(t, card)}
+      className={`relative shrink-0 overflow-hidden rounded-md [perspective:600px] ${SIZES[size]}`}
       initial={reduce ? false : { opacity: 0, y: -40, x: 30, rotate: -8 }}
       animate={{ opacity: 1, y: 0, x: 0, rotate: 0 }}
       transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 24, delay: dealIndex * 0.12 }}
@@ -60,13 +67,14 @@ export function Card({ card, faceDown = false, dealIndex = 0, size = 'md', highl
         transition={reduce ? { duration: 0 } : { duration: 0.45, ease: 'easeInOut' }}
       >
         <div
-          className={`${face} flex flex-col justify-between bg-fg p-1.5 font-mono font-bold leading-none ${
-            red ? 'text-[#c81e3a]' : 'text-bg'
+          className={`${face} overflow-hidden bg-card font-mono font-bold leading-none ${
+            red ? 'text-[#c81e3a]' : 'text-card-ink'
           } ${highlight ? 'border-neon shadow-glow-neon' : 'border-border'}`}
         >
-          <span>{rank}<br />{suit}</span>
-          <span className="self-center text-[1.8em]">{suit}</span>
-          <span className="rotate-180 self-end">{rank}<br />{suit}</span>
+          {/* corners are absolutely placed in em/% of the card, so they stay inside at every size (sm..lg) */}
+          <span className={CORNER} style={{ left: '7%', top: '5%' }}>{rank}<span>{suit}</span></span>
+          <span className="absolute inset-0 grid place-items-center text-[1.6em]" aria-hidden>{suit}</span>
+          <span className={`${CORNER} rotate-180`} style={{ right: '7%', bottom: '5%' }}>{rank}<span>{suit}</span></span>
         </div>
         <div
           className={`${face} border-neon/40 bg-surface-2 [transform:rotateY(180deg)]`}
