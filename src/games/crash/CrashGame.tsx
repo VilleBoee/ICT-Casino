@@ -130,7 +130,7 @@ export default function CrashGame() {
                 <input inputMode="decimal" placeholder={t('cr.autoPh')} value={autoStr} disabled={live}
                   onChange={(e) => setAutoStr(e.target.value)}
                   aria-invalid={!!autoStr && !auto}
-                  className="num w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-fg placeholder:text-muted/70 aria-[invalid=true]:border-lose" />
+                  className="num min-h-11 w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-fg placeholder:text-muted/70 aria-[invalid=true]:border-lose" />
                 {autoStr && !auto && <span className="text-xs text-lose">{t('cr.min')}</span>}
               </label>
               {canCash ? (

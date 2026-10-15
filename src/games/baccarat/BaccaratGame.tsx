@@ -117,7 +117,7 @@ export default function BaccaratGame() {
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('rl.chipValue')}>
               {DENOMINATIONS.map((d) => (
-                <Chip key={d} value={d} size={40} selected={chip === d} disabled={revealing || d > balance - total} onClick={() => setChip(d)} />
+                <Chip key={d} value={d} size={44} selected={chip === d} disabled={revealing || d > balance - total} onClick={() => setChip(d)} />
               ))}
               <div className="ml-auto flex flex-wrap gap-2">
                 <button type="button" className="btn-ghost" disabled={revealing || total === 0} onClick={newRound}>{t('bet.clear')}</button>

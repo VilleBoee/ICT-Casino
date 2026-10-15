@@ -146,7 +146,7 @@ export default function DiceGame() {
               <span className="block font-mono text-xs uppercase text-muted">{t('dc.targetRange', { a: fmt(min), b: fmt(max) })}</span>
               <input type="number" step={0.01} min={min} max={max} value={target} disabled={rolling}
                 onChange={(e) => setTarget(clampTarget(Number(e.target.value), direction))}
-                className="num w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-lg text-fg" />
+                className="num min-h-11 w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-lg text-fg" />
             </label>
             <div className="panel space-y-1 p-3">
               <p className="font-mono text-xs uppercase text-muted">{t('dc.chance')}</p>

@@ -66,7 +66,7 @@ export function TopBar({ path = '/' }: { path?: string }) {
             aria-label={t('top.volume')}
             aria-valuetext={`${Math.round(volume * 100)}%`}
             title={t('top.volumeTitle', { n: Math.round(volume * 100) })}
-            className={phone ? "col-span-2 min-h-11 w-full accent-neon" : "hidden w-20 accent-neon md:block"}
+            className={phone ? "col-span-2 min-h-11 w-full accent-neon" : "hidden h-11 w-20 cursor-pointer accent-neon md:block"}
           />
     </>
   )

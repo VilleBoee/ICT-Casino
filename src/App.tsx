@@ -39,7 +39,7 @@ export default function App() {
         {route(path)}
       </main>
       <footer className="mx-auto max-w-6xl px-4 pb-8 font-mono text-xs text-muted">
-        {t('app.footer')}<a href="#/dev" className="inline-block pointer-coarse:px-2 pointer-coarse:py-3">/dev</a>
+        {t('app.footer')}<a href="#/dev" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1">/dev</a>
       </footer>
     </>
   )
