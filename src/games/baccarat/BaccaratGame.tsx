@@ -128,7 +128,7 @@ export default function BaccaratGame() {
                 const amt = bets[side]
                 const res = done ? round!.outcome.bets.find((b) => b.side === side) : undefined
                 return (
-                  <button key={side} type="button" disabled={revealing} onClick={() => place(side)}
+                  <button key={side} type="button" data-sfx="chip" disabled={revealing} onClick={() => place(side)}
                     aria-label={`Bet ${label.toLowerCase()}, pays ${pays}${amt ? `, ${amt} placed` : ''}`}
                     className={`relative flex min-h-20 flex-col items-center justify-center rounded-lg border-2 bg-bg/40 font-mono transition-colors hover:bg-surface-2 disabled:cursor-not-allowed ${cls} ${winner === side ? 'bg-surface-2 shadow-glow-neon' : ''}`}>
                     <span className="text-sm font-extrabold sm:text-base">{label}</span>

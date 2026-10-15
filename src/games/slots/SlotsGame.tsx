@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CountUp, ResultToast, Table } from '../../components'
 import { useWallet } from '../../app/wallet'
+import { play } from '../../app/sound'
 import {
   PAYLINES, REELS, SLOT_PAYTABLE, SLOT_SYMBOLS, rollSlots, slotsRtp, spinSlots, type SlotsOutcome,
 } from '../../engine/slots'
@@ -129,6 +130,7 @@ export default function SlotsGame() {
                   highlight={(row) => cells.has(`${reel}:${row}`)}
                   dim={wins.length > 0}
                   onStop={reel === REELS - 1 && spinning ? stop : undefined}
+                  onLand={spinning && !reduce ? () => play('reel', { rate: 1 + reel * 0.04 }) : undefined}
                 />
               ))}
             </div>

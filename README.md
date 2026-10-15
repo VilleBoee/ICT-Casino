@@ -166,3 +166,7 @@ Notes: video poker theory is for optimal play (5 coins: 99.54% return thanks to 
 ## `$ cat DISCLAIMER`
 
 ICT-Casino is for **entertainment and education only**. It uses virtual chips with no monetary value, which can't be bought, sold or cashed out. No real-money gambling is involved or encouraged. If gambling is a problem for you or someone you know, please seek support.
+
+## Sounds
+
+All sound effects in `public/sfx/` are original, synthesized by `scripts/gen-sfx.mjs` (ffmpeg). They contain no third-party samples and are dedicated to the public domain (CC0). To regenerate them, run `node scripts/gen-sfx.mjs`. The top-bar toggle mutes all sound, and the choice is saved in localStorage. With no saved choice the game stays silent until the first interaction.

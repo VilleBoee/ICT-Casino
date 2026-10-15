@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { play } from '../app/sound'
 import type { Chips, RoundResult } from '../engine/types'
 
 export type ResultKind = 'win' | 'lose' | 'push'
@@ -16,6 +17,8 @@ export interface ResultToastProps {
   message?: string
   onDismiss?: () => void
   autoHideMs?: number
+  /** Play the win/lose/push sound when a result appears (default true). */
+  sound?: boolean
 }
 
 const STYLE: Record<ResultKind, { label: string; cls: string }> = {
@@ -25,8 +28,14 @@ const STYLE: Record<ResultKind, { label: string; cls: string }> = {
 }
 const signed = (n: Chips) => (n > 0 ? `+${n}` : String(n))
 
-export function ResultToast({ result, message, onDismiss, autoHideMs = 3000 }: ResultToastProps) {
+export function ResultToast({ result, message, onDismiss, autoHideMs = 3000, sound = true }: ResultToastProps) {
   const reduce = useReducedMotion()
+  const roundId = result?.roundId
+  useEffect(() => {
+    if (!result || !sound) return
+    const k = resultKind(result)
+    play(k === 'win' ? 'win' : k === 'lose' ? 'lose' : 'tick')
+  }, [roundId]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!result || !onDismiss || autoHideMs <= 0) return
     const t = setTimeout(onDismiss, autoHideMs)
