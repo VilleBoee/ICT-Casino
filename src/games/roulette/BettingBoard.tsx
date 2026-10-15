@@ -1,6 +1,8 @@
 import { colorOf } from '../../engine/roulette'
 import { fmtChips } from '../../components'
-import { cellOf, spotKey, type BetMap, type Spot } from './bets'
+import { cellOf, insideSpots, spotKey, spotWins, type BetMap, type Spot } from './bets'
+
+const INSIDE = insideSpots()
 
 interface Props {
   bets: BetMap
@@ -11,16 +13,17 @@ interface Props {
 
 const NUM_BG = { red: 'bg-[#b91c3a]', black: 'bg-surface-2', green: 'bg-[#0f8a4a]' } as const
 
-function Marker({ amount }: { amount?: number }) {
+function Marker({ amount, won }: { amount?: number; won?: boolean }) {
   if (!amount) return null
   return (
-    <span className="pointer-events-none absolute -right-1 -top-1 z-10 grid h-6 min-w-6 place-items-center rounded-full border-2 border-neon bg-bg px-1 font-mono text-[10px] font-bold text-neon shadow-glow-neon">
+    <span className={`pointer-events-none absolute -right-1 -top-1 z-10 grid h-6 min-w-6 place-items-center rounded-full border-2 bg-bg px-1 font-mono text-[10px] font-bold ${won ? 'border-win text-win shadow-[0_0_12px_rgb(74_222_128/.7)]' : 'border-neon text-neon shadow-glow-neon'}`}>
       {fmtChips(amount)}
     </span>
   )
 }
 
-/** European betting layout: 0, 1–36 grid, columns, dozens, even-money bets, plus splits between adjacent numbers. */
+/** European betting layout: 0, 1–36 grid, columns, dozens, even-money bets, plus every inside bet
+ *  (splits, streets, corners, six-lines, zero splits, trios, first four) as hit-spots over the grid. */
 export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
   const amt = (s: Spot) => bets[spotKey(s)]?.amount
   const cell = (s: Spot, label: React.ReactNode, cls: string, style?: React.CSSProperties, aria?: string) => (
@@ -29,20 +32,13 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
       disabled={disabled}
       onClick={() => onPlace(s)}
       style={style}
-      aria-label={`${aria ?? String(label)}${amt(s) ? `, ${amt(s)} bet` : ''}`}
-      className={`relative grid min-h-10 place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
+      aria-label={`${aria ?? String(label)}${amt(s) ? `, ${amt(s)} bet` : ''}${winning !== null && amt(s) && spotWins(s, winning) ? ', winner' : ''}`}
+      className={`relative ${winning !== null && s.kind !== 'straight' && spotWins(s, winning) ? 'ring-1 ring-inset ring-win/70' : ''} grid min-h-10 place-items-center border border-border/80 font-mono text-sm font-semibold text-fg transition-colors hover:bg-neon/20 hover:text-neon disabled:cursor-not-allowed ${cls}`}
     >
       {label}
-      <Marker amount={amt(s)} />
+      <Marker amount={amt(s)} won={winning !== null && spotWins(s, winning)} />
     </button>
   )
-
-  const splits: { s: Spot; style: React.CSSProperties }[] = []
-  for (let n = 1; n <= 36; n++) {
-    const { col, row } = cellOf(n)
-    if (n + 3 <= 36) splits.push({ s: { kind: 'split', numbers: [n, n + 3] }, style: { gridColumn: col + 1, gridRow: row + 1, justifySelf: 'end', marginRight: -6 } })
-    if ((n - 1) % 3 !== 2) splits.push({ s: { kind: 'split', numbers: [n, n + 1] }, style: { gridColumn: col + 1, gridRow: row + 1, alignSelf: 'start', marginTop: -6 } })
-  }
 
   return (
     <div className="overflow-x-auto pb-2">
@@ -56,22 +52,33 @@ export function BettingBoard({ bets, onPlace, disabled, winning }: Props) {
             </div>
           )
         })}
-        {splits.map(({ s, style }) => (
-          <button
-            key={spotKey(s)}
-            type="button"
-            tabIndex={-1}
-            disabled={disabled}
-            onClick={() => onPlace(s)}
-            style={style}
-            title={`Split ${(s as { numbers: number[] }).numbers.join('/')}`}
-            aria-label={`Split ${(s as { numbers: number[] }).numbers.join(' and ')}`}
-            className="relative z-10 h-3 w-3 rounded-full opacity-0 hover:bg-cyan hover:opacity-80 disabled:hidden data-[on=true]:opacity-100"
-            data-on={!!amt(s)}
-          >
-            <Marker amount={amt(s)} />
-          </button>
-        ))}
+        {/* inside bets (splits, streets, corners, six-lines, zero bets) over the number grid */}
+        <div className="pointer-events-none relative" style={{ gridColumn: '2 / 14', gridRow: '1 / 4' }}>
+          {INSIDE.map(({ spot, x, y, label }) => {
+            const a = amt(spot)
+            const won = winning !== null && spotWins(spot, winning)
+            return (
+              <button
+                key={spotKey(spot)}
+                type="button"
+                disabled={disabled}
+                onClick={() => onPlace(spot)}
+                title={label}
+                aria-label={`${label}${a ? `, ${a} bet` : ''}${won && a ? ', winner' : ''}`}
+                style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+                className={`group pointer-events-auto absolute z-10 grid h-4 w-4 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full disabled:cursor-not-allowed ${
+                  a ? '' : 'hover:bg-cyan/80 focus-visible:bg-cyan/80'
+                }`}
+              >
+                {a ? (
+                  <span className={`grid h-6 min-w-6 place-items-center rounded-full border-2 bg-bg px-1 font-mono text-[10px] font-bold ${
+                    won ? 'border-win text-win shadow-[0_0_12px_rgb(74_222_128/.7)]' : 'border-cyan text-cyan shadow-glow-cyan'
+                  }`}>{fmtChips(a)}</span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
         {([3, 2, 1] as const).map((c, r) =>
           <div key={c} style={{ gridColumn: 14, gridRow: r + 1 }} className="grid">
             {cell({ kind: 'column', index: c }, '2:1', 'bg-surface', undefined, `Column ${c}`)}
