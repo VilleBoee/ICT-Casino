@@ -13,10 +13,11 @@ export function TopBar() {
   const { muted, volume, toggleMute, setVolume } = useSound()
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-3">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-3">
         <a href={href('/')} className="shrink-0 py-0 font-mono text-base font-extrabold pointer-coarse:py-2.5 text-fg no-underline hover:no-underline sm:text-lg">
           ICT<span className="text-neon text-glow">_</span>Casino
         </a>
+        <span className="shrink-0 -ml-1 font-mono text-[10px] text-muted sm:-ml-2 sm:text-xs" title={`ICT_Casino v${__APP_VERSION__}`}>v{__APP_VERSION__}</span>
         <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
           <a href={href('/stats')} className="btn-ghost whitespace-nowrap px-2 no-underline pointer-coarse:py-2.5 sm:px-3" title={t('top.statsTitle')}>{t('top.stats')}</a>
           <button
