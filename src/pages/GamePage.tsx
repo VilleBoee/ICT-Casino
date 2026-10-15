@@ -6,10 +6,11 @@ import NotFound from './NotFound'
 import BlackjackGame from '../games/blackjack/BlackjackGame'
 import SlotsGame from '../games/slots/SlotsGame'
 import BaccaratGame from '../games/baccarat/BaccaratGame'
+import CrashGame from '../games/crash/CrashGame'
 import RouletteGame from '../games/roulette/RouletteGame'
 
 /** Game UIs register here as they land (#12, #15, ...). */
-const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame }
+const SCREENS: Partial<Record<GameId, ComponentType>> = { roulette: RouletteGame, blackjack: BlackjackGame, slots: SlotsGame, baccarat: BaccaratGame, crash: CrashGame }
 
 export default function GamePage({ id }: { id: string }) {
   const game = gameById(id)
